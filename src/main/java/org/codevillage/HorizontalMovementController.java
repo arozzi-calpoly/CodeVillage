@@ -128,4 +128,24 @@ public class HorizontalMovementController extends MovementController
     @Override
     public void mouseExited(MouseEvent e)
     { }
+
+    public boolean getWIsPressed()
+    {
+        return wIsPressed.get();
+    }
+
+    public boolean getAIsPressed()
+    {
+        return aIsPressed.get();
+    }
+
+    public boolean getSIsPressed()
+    {
+        return sIsPressed.get();
+    }
+
+    public boolean getDIsPressed()
+    {
+        return dIsPressed.get();
+    }
 }

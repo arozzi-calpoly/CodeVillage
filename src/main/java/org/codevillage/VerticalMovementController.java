@@ -30,7 +30,7 @@ public class VerticalMovementController extends HorizontalMovementController
     @Override
     public void keyReleased(KeyEvent e)
     {
-        super.keyPressed(e);
+        super.keyReleased(e);
         switch (e.getKeyCode())
         {
             case KeyEvent.VK_SPACE:
@@ -40,5 +40,15 @@ public class VerticalMovementController extends HorizontalMovementController
                 shiftIsPressed.set(false);
                 break;
         }
+    }
+
+    public boolean getSpaceBarIsPressed()
+    {
+        return this.spaceBarIsPressed.get();
+    }
+
+    public boolean getShiftIsPressed()
+    {
+        return this.shiftIsPressed.get();
     }
 }
