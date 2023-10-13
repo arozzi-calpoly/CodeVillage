@@ -11,7 +11,7 @@ repositories {
 
 
 dependencies {
-    implementation("java3d:j3d-core:1.3.1");
+    implementation("java3d:j3d-core:1.3.1")
 
     implementation(fileTree(mapOf("dir" to "jar/", "include" to listOf("*.jar"))))
     runtimeOnly(fileTree(mapOf("dir" to "jar/", "include" to listOf("*.jar"))))
