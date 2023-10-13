@@ -1,22 +1,25 @@
 package org.codevillage;
 
-import java.awt.event.KeyEvent;
+import com.jogamp.newt.event.KeyEvent;
+
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class VerticalMovementController extends HorizontalMovementController
 {
     protected AtomicBoolean spaceBarIsPressed = new AtomicBoolean(false);
     protected AtomicBoolean shiftIsPressed = new AtomicBoolean(false);
-    public VerticalMovementController(float stepSize)
+    public VerticalMovementController(float translationStepSize, float rotationStepSize)
     {
-        super(stepSize);
+        super(translationStepSize, rotationStepSize);
     }
 
-    @Override
-    public void keyPressed(KeyEvent e)
+    public void keyPressed(KeyEvent keyEvent)
     {
-        super.keyPressed(e);
-        switch (e.getKeyCode())
+        if(keyEvent.isAutoRepeat())
+            return;
+
+        super.keyPressed(keyEvent);
+        switch (keyEvent.getKeyCode())
         {
             case KeyEvent.VK_SPACE:
                 spaceBarIsPressed.set(true);
@@ -28,10 +31,13 @@ public class VerticalMovementController extends HorizontalMovementController
     }
 
     @Override
-    public void keyReleased(KeyEvent e)
+    public void keyReleased(KeyEvent keyEvent)
     {
-        super.keyReleased(e);
-        switch (e.getKeyCode())
+        if(keyEvent.isAutoRepeat())
+            return;
+
+        super.keyReleased(keyEvent);
+        switch (keyEvent.getKeyCode())
         {
             case KeyEvent.VK_SPACE:
                 spaceBarIsPressed.set(false);

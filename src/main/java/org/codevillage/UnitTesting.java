@@ -5,10 +5,7 @@ import com.jogamp.newt.NewtFactory;
 import com.jogamp.newt.Screen;
 import com.jogamp.newt.opengl.GLWindow;
 import com.jogamp.opengl.*;
-import com.jogamp.opengl.math.FovHVHalves;
-import com.jogamp.opengl.math.Matrix4f;
-import com.jogamp.opengl.math.Vec3f;
-import com.jogamp.opengl.math.Vec4f;
+import com.jogamp.opengl.math.*;
 import com.jogamp.opengl.util.FPSAnimator;
 
 import javax.swing.*;
@@ -20,6 +17,7 @@ import java.nio.file.Path;
 
 public class UnitTesting
 {
+    /*
     public static void testHorizontalMovementControllerKeyPresses()
     {
         JFrame frame = new JFrame();
@@ -131,8 +129,8 @@ public class UnitTesting
         frame.pack();
         frame.setVisible(true);
     }
-
-    public static void testSimpleShader()
+    */
+    public static void testSimpleShader(MovementController movementController)
     {
         GLProfile glProfile = GLProfile.get(GLProfile.GL4);
 
@@ -152,19 +150,26 @@ public class UnitTesting
 
         FPSAnimator animator = new FPSAnimator(window, 30);
         GLTestSimpleShaderEventListener testSimpleShaderEventListener =
-                new GLTestSimpleShaderEventListener();
+                new GLTestSimpleShaderEventListener(movementController);
         animator.start();
-        // window.addKeyListener(windowCreationEventListener);
+        window.addKeyListener(movementController);
         window.addGLEventListener(testSimpleShaderEventListener);
     }
 
     private static class GLTestSimpleShaderEventListener implements GLEventListener
     {
+        private final MovementController movementController;
+        public GLTestSimpleShaderEventListener(MovementController movementController)
+        {
+            this.movementController = movementController;
+        }
+
         private StaticMVPShader shader;
         private Model3D sphereModel;
         private Texture modelTexture;
         private Vec3f lightDirection;
         private Vec3f eyePosition;
+        private Vec2f eyeRotation;
         @Override
         public void init(GLAutoDrawable glAutoDrawable)
         {
@@ -180,6 +185,8 @@ public class UnitTesting
             lightDirection = new Vec3f(1, -1, -1);
 
             eyePosition = new Vec3f(0, 0, 3);
+
+            eyeRotation = new Vec2f(0, 0);
         }
 
         @Override
@@ -205,6 +212,8 @@ public class UnitTesting
             // enables multi-sample antialiasing (if the GLCapabilities object set it up)
             gl.glEnable(GL.GL_MULTISAMPLE);
 
+            eyePosition = movementController.getNextPosition(eyePosition, eyeRotation);
+            eyeRotation = movementController.getNextRotation(eyePosition, eyeRotation);
 
             // Matrix4f projectionMatrix = new Matrix4f().loadIdentity().setToPerspective((float)Math.toRadians(90.0f),
             //        1280.0f/720.0f, 0.1f, 1000.0f);
@@ -215,18 +224,12 @@ public class UnitTesting
             projectionMatrix.setToPerspective(FovHVHalves.byRadians((float) (Math.PI / 2), (float) (Math.PI / 2)),
                     0.1f, 100f);
 
-            Matrix4f viewMatrix = new Matrix4f().loadIdentity().setToTranslation(new Vec3f(eyePosition).scale(-1));
+            // Matrix4f viewMatrix = new Matrix4f().loadIdentity().setToTranslation(new Vec3f(eyePosition).scale(-1));
+            Matrix4f viewMatrix = createTransformationMatrix(new Vec3f(eyePosition).scale(-1), -eyeRotation.x(), -eyeRotation.y(), 0, 1);
+            System.out.println(eyePosition);
+            System.out.println(eyeRotation);
+            System.out.println();
             Matrix4f modelMatrix = new Matrix4f().loadIdentity();
-
-            Vec4f origin = new Vec4f(0,0,0, 1);
-            modelMatrix.mulVec4f(origin);
-            viewMatrix.mulVec4f(origin);
-            projectionMatrix.mulVec4f(origin);
-
-            Matrix4f mvpMatrix = new Matrix4f(projectionMatrix).mul(viewMatrix).mul(modelMatrix);
-
-            origin = new Vec4f(0,0,0,1);
-            mvpMatrix.mulVec4f(origin);
 
             shader.start(gl);
 
@@ -250,6 +253,19 @@ public class UnitTesting
         @Override
         public void reshape(GLAutoDrawable glAutoDrawable, int i, int i1, int i2, int i3)
         { }
+
+        public static Matrix4f createTransformationMatrix(Vec3f translation, float rx, float ry,
+                                                          float rz, float scale)
+        {
+            Matrix4f matrix = new Matrix4f();
+            matrix.loadIdentity();
+            matrix.scale(scale, new Matrix4f());
+            matrix.mul(new Matrix4f().setToRotationEuler(rx, 0, 0));
+            matrix.mul(new Matrix4f().setToRotationEuler(0, ry, 0));
+            matrix.mul(new Matrix4f().setToRotationEuler(0, 0, rz));
+            matrix.translate(translation, new Matrix4f());
+            return matrix;
+        }
     }
 
     public static void testGraphicsWindowCreation()

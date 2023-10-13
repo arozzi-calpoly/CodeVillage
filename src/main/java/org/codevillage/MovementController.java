@@ -1,10 +1,10 @@
 package org.codevillage;
 
+import com.jogamp.newt.event.KeyListener;
+import com.jogamp.newt.event.MouseListener;
 import com.jogamp.opengl.math.Vec2f;
 import com.jogamp.opengl.math.Vec3f;
 
-import java.awt.event.KeyListener;
-import java.awt.event.MouseListener;
 
 public interface MovementController extends KeyListener, MouseListener
 {
@@ -18,11 +18,11 @@ public interface MovementController extends KeyListener, MouseListener
     Vec3f getNextPosition(Vec3f currentPosition, Vec2f currentRotationRads);
 
     /**
-     * Gets the next (yaw, pitch) angles given the current angles
+     * Gets the next (pitch, yaw) angles given the current angles
      * @param currentPosition The point's current position
-     * @param currentRotation The current yaw and pitch angles, in radians,
+     * @param currentRotation The current pitch and yaw angles, in radians,
      *                        where the pitch is in the x component and the yaw is in the y component
-     * @return The next yaw and pitch angles, in the same format as provided
+     * @return The next pitch and yaw angles, in the same format as provided
      */
     Vec2f getNextRotation(Vec3f currentPosition, Vec2f currentRotation);
 
