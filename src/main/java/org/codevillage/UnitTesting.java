@@ -1,5 +1,12 @@
 package org.codevillage;
 
+import com.jogamp.newt.Display;
+import com.jogamp.newt.NewtFactory;
+import com.jogamp.newt.Screen;
+import com.jogamp.newt.opengl.GLWindow;
+import com.jogamp.opengl.*;
+import com.jogamp.opengl.util.FPSAnimator;
+
 import javax.swing.*;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
@@ -118,5 +125,65 @@ public class UnitTesting
         frame.setLocationRelativeTo(null);
         frame.pack();
         frame.setVisible(true);
+    }
+
+    public static void testGraphicsWindowCreation()
+    {
+        GLProfile glProfile = GLProfile.get(GLProfile.GL4);
+
+        GLCapabilities glCapabilities = new GLCapabilities(glProfile);
+        glCapabilities.setDoubleBuffered(true);
+        glCapabilities.setHardwareAccelerated(true);
+
+        String windowTitle = "Window Creation Test";
+        Display display = NewtFactory.createDisplay(windowTitle);
+        Screen screen = NewtFactory.createScreen(display, 0);
+
+        int WINDOW_WIDTH = 800, WINDOW_HEIGHT = 600;
+        GLWindow window = GLWindow.create(screen, glCapabilities);
+        window.setTitle(windowTitle);
+        window.setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
+        window.setVisible(true);
+
+        FPSAnimator animator = new FPSAnimator(window, 30);
+        GLTestWindowCreationEventListener windowCreationEventListener =
+                new GLTestWindowCreationEventListener();
+        animator.start();
+        // window.addKeyListener(windowCreationEventListener);
+        window.addGLEventListener(windowCreationEventListener);
+    }
+
+    private static class GLTestWindowCreationEventListener implements GLEventListener
+    {
+        @Override
+        public void init(GLAutoDrawable glAutoDrawable)
+        { }
+
+        @Override
+        public void dispose(GLAutoDrawable glAutoDrawable)
+        {
+            System.out.println("Disposed");
+            // Free the VAOs, textures, whatever resources you were using with the GL4 instance
+            // given by 'glAutoDrawable.getGL().getGL4()'
+            System.exit(0);
+        }
+        @Override
+        public void display(GLAutoDrawable glAutoDrawable)
+        {
+            GL4 gl = glAutoDrawable.getGL().getGL4();
+            double redComponent = Math.sin(System.currentTimeMillis() / 1000.0 * Math.PI) * 0.5 + 0.5;
+            gl.glClearColor((float) redComponent, 0, 0, 0);
+            gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
+            // configs alpha blending settings
+            gl.glEnable(GL.GL_BLEND);
+            gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
+            // turns on depth testing
+            gl.glEnable(GL.GL_DEPTH_TEST);
+            // enables multi-sample antialiasing (if the GLCapabilities object set it up)
+            gl.glEnable(GL.GL_MULTISAMPLE);
+        }
+        @Override
+        public void reshape(GLAutoDrawable glAutoDrawable, int i, int i1, int i2, int i3)
+        { }
     }
 }
