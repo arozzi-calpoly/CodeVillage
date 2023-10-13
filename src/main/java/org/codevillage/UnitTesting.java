@@ -5,6 +5,10 @@ import com.jogamp.newt.NewtFactory;
 import com.jogamp.newt.Screen;
 import com.jogamp.newt.opengl.GLWindow;
 import com.jogamp.opengl.*;
+import com.jogamp.opengl.math.FovHVHalves;
+import com.jogamp.opengl.math.Matrix4f;
+import com.jogamp.opengl.math.Vec3f;
+import com.jogamp.opengl.math.Vec4f;
 import com.jogamp.opengl.util.FPSAnimator;
 
 import javax.swing.*;
@@ -12,6 +16,7 @@ import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
+import java.nio.file.Path;
 
 public class UnitTesting
 {
@@ -125,6 +130,126 @@ public class UnitTesting
         frame.setLocationRelativeTo(null);
         frame.pack();
         frame.setVisible(true);
+    }
+
+    public static void testSimpleShader()
+    {
+        GLProfile glProfile = GLProfile.get(GLProfile.GL4);
+
+        GLCapabilities glCapabilities = new GLCapabilities(glProfile);
+        glCapabilities.setDoubleBuffered(true);
+        glCapabilities.setHardwareAccelerated(true);
+
+        String windowTitle = "Simple Shader Test";
+        Display display = NewtFactory.createDisplay(windowTitle);
+        Screen screen = NewtFactory.createScreen(display, 0);
+
+        int WINDOW_WIDTH = 800, WINDOW_HEIGHT = 600;
+        GLWindow window = GLWindow.create(screen, glCapabilities);
+        window.setTitle(windowTitle);
+        window.setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
+        window.setVisible(true);
+
+        FPSAnimator animator = new FPSAnimator(window, 30);
+        GLTestSimpleShaderEventListener testSimpleShaderEventListener =
+                new GLTestSimpleShaderEventListener();
+        animator.start();
+        // window.addKeyListener(windowCreationEventListener);
+        window.addGLEventListener(testSimpleShaderEventListener);
+    }
+
+    private static class GLTestSimpleShaderEventListener implements GLEventListener
+    {
+        private StaticMVPShader shader;
+        private Model3D sphereModel;
+        private Texture modelTexture;
+        private Vec3f lightDirection;
+        private Vec3f eyePosition;
+        @Override
+        public void init(GLAutoDrawable glAutoDrawable)
+        {
+            GL4 gl = glAutoDrawable.getGL().getGL4();
+            String vertexShaderPath = "C:\\Users\\trozz\\OneDrive\\CalPoly\\SoftwareEngineeringII\\CodeVillage\\src\\main\\resources\\shaders\\simple_vertex_shader.glsl";
+            String fragmentShaderPath = "C:\\Users\\trozz\\OneDrive\\CalPoly\\SoftwareEngineeringII\\CodeVillage\\src\\main\\resources\\shaders\\simple_fragment_shader.glsl";
+            shader = new StaticMVPShader(gl, Path.of(vertexShaderPath), Path.of(fragmentShaderPath));
+
+            sphereModel = RenderingGeometryLib.generateSphereBySubdividingIcosahedron(gl, 4);
+
+            modelTexture = ModelLoader.createSolidColorTexture(gl, 100, 100, Color.GREEN);
+
+            lightDirection = new Vec3f(1, -1, -1);
+
+            eyePosition = new Vec3f(0, 0, 3);
+        }
+
+        @Override
+        public void dispose(GLAutoDrawable glAutoDrawable)
+        {
+            // Free the VAOs, textures, whatever resources you were using with the given GL4 instance
+            GL4 gl = glAutoDrawable.getGL().getGL4();
+            System.out.println("Disposed");
+            ModelLoader.cleanUp(gl);
+            System.exit(0);
+        }
+        @Override
+        public void display(GLAutoDrawable glAutoDrawable)
+        {
+            GL4 gl = glAutoDrawable.getGL().getGL4();
+            gl.glClearColor(0, 0, 0, 1);
+            gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
+            // configs alpha blending settings
+            gl.glEnable(GL.GL_BLEND);
+            gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
+            // turns on depth testing
+            gl.glEnable(GL.GL_DEPTH_TEST);
+            // enables multi-sample antialiasing (if the GLCapabilities object set it up)
+            gl.glEnable(GL.GL_MULTISAMPLE);
+
+
+            // Matrix4f projectionMatrix = new Matrix4f().loadIdentity().setToPerspective((float)Math.toRadians(90.0f),
+            //        1280.0f/720.0f, 0.1f, 1000.0f);
+
+            // left=-width/2, right=+width/2, bottom=-height/2 and top=+height/2;
+            // projectionMatrix.setToOrtho(-width/2, +width/2, -height/2, +height/2, 0.1f, 100f);
+            Matrix4f projectionMatrix = new Matrix4f().loadIdentity();
+            projectionMatrix.setToPerspective(FovHVHalves.byRadians((float) (Math.PI / 2), (float) (Math.PI / 2)),
+                    0.1f, 100f);
+
+            Matrix4f viewMatrix = new Matrix4f().loadIdentity().setToTranslation(new Vec3f(eyePosition).scale(-1));
+            Matrix4f modelMatrix = new Matrix4f().loadIdentity();
+
+            Vec4f origin = new Vec4f(0,0,0, 1);
+            modelMatrix.mulVec4f(origin);
+            viewMatrix.mulVec4f(origin);
+            projectionMatrix.mulVec4f(origin);
+
+            Matrix4f mvpMatrix = new Matrix4f(projectionMatrix).mul(viewMatrix).mul(modelMatrix);
+
+            origin = new Vec4f(0,0,0,1);
+            mvpMatrix.mulVec4f(origin);
+
+            shader.start(gl);
+
+            shader.loadModelViewProjectionMatrices(gl, modelMatrix, viewMatrix, projectionMatrix);
+            shader.loadEyePosition(gl, eyePosition);
+            shader.loadLightDirection(gl, lightDirection);
+            shader.loadModelTexture(gl, modelTexture);
+            // bind the VAO
+            gl.glBindVertexArray(sphereModel.getVaoID());
+            // enable all the vertex attributes
+            sphereModel.enableAllVertexAttributeArrays(gl);
+            // activate and bind the textures for the model
+            shader.enableAllTextures(gl);
+            // finally, draw all the triangles
+            gl.glDrawElements(GL4.GL_TRIANGLES, sphereModel.getVertexCount(), GL.GL_UNSIGNED_INT, 0);
+            sphereModel.disableAllVertexAttributeArrays(gl);
+            gl.glBindVertexArray(0);
+
+            shader.stop(gl);
+        }
+        @Override
+        public void reshape(GLAutoDrawable glAutoDrawable, int i, int i1, int i2, int i3)
+        { }
     }
 
     public static void testGraphicsWindowCreation()

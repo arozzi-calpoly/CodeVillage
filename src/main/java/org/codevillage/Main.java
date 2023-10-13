@@ -5,6 +5,6 @@ public class Main {
     {
         System.out.println("Hello world!");
         // UnitTesting.testVerticalMovementControllerKeyPresses();
-        UnitTesting.testGraphicsWindowCreation();
+        UnitTesting.testSimpleShader();
     }
 }

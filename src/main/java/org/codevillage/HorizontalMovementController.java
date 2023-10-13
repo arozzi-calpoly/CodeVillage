@@ -1,17 +1,17 @@
 package org.codevillage;
 
-import javax.vecmath.Point2d;
-import javax.vecmath.Point3d;
-import javax.vecmath.Vector3d;
+import com.jogamp.opengl.math.Vec2f;
+import com.jogamp.opengl.math.Vec3f;
+
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class HorizontalMovementController extends MovementController
+public class HorizontalMovementController implements MovementController
 {
-    Vector3d UP_VECTOR = new Vector3d(0, 1, 0);
+    Vec3f UP_VECTOR = new Vec3f(0, 1, 0);
 
-    protected double stepSize;
+    protected float stepSize;
     protected AtomicBoolean wIsPressed = new AtomicBoolean(false);
     protected AtomicBoolean aIsPressed = new AtomicBoolean(false);
     protected AtomicBoolean sIsPressed = new AtomicBoolean(false);
@@ -19,28 +19,26 @@ public class HorizontalMovementController extends MovementController
 
     // we eventually want to create a second constructor that accepts a bounding box argument too
     // once the Box class is implemented
-    public HorizontalMovementController(double stepSize)
+    public HorizontalMovementController(float stepSize)
     {
         this.stepSize = stepSize;
         // this.boundingBox = null;
     }
 
     /*
-
     public HorizontalMovementController(double stepSize, Box boundingBox)
     {
         this.stepSize = stepSize;
         this.boundingBox = boundingBox;
     }
-
     */
 
     @Override
-    public Point3d getNextPosition(Point3d currentPosition, Point2d currentRotationRads)
+    public Vec3f getNextPosition(Vec3f currentPosition, Vec2f currentRotationRads)
     {
-        Point3d nextPosition = new Point3d(currentPosition);
-        Vector3d forwardVector = calculateJava3DForwardVectorFromPitchAndYaw(currentRotationRads.x, currentRotationRads.y);
-        Vector3d rightVector = new Vector3d();
+        Vec3f nextPosition = new Vec3f(currentPosition);
+        Vec3f forwardVector = MovementController.calculateOpenGLForwardVectorFromPitchAndYaw(currentRotationRads.x(), currentRotationRads.y());
+        Vec3f rightVector = new Vec3f();
         rightVector.cross(UP_VECTOR, forwardVector);
         rightVector.normalize();
 
@@ -60,7 +58,7 @@ public class HorizontalMovementController extends MovementController
     }
 
     @Override
-    public Point2d getNextRotation(Point3d currentPosition, Point2d currentRotation)
+    public Vec2f getNextRotation(Vec3f currentPosition, Vec2f currentRotation)
     {
         return null;
     }

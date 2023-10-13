@@ -7,7 +7,7 @@ public class VerticalMovementController extends HorizontalMovementController
 {
     protected AtomicBoolean spaceBarIsPressed = new AtomicBoolean(false);
     protected AtomicBoolean shiftIsPressed = new AtomicBoolean(false);
-    public VerticalMovementController(double stepSize)
+    public VerticalMovementController(float stepSize)
     {
         super(stepSize);
     }
