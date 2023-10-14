@@ -181,11 +181,12 @@ public class UnitTesting
             String fragmentShaderPath = "C:\\Users\\trozz\\OneDrive\\CalPoly\\SoftwareEngineeringII\\CodeVillage\\src\\main\\resources\\shaders\\simple_fragment_shader.glsl";
             shader = new StaticMVPShader(gl, Path.of(vertexShaderPath), Path.of(fragmentShaderPath));
 
-            sphereModel = RenderingGeometryLib.generateSphereBySubdividingIcosahedron(gl, 4);
+            // sphereModel = RenderingGeometryLib.generateSphereBySubdividingIcosahedron(gl, 4);
+            sphereModel = RenderingGeometryLib.generateCubeModel(gl);
 
             groundModel = RenderingGeometryLib.generateXZGrid(gl, -10, 10, -10, 10, 2, 2);
 
-            modelTexture = ModelLoader.createSolidColorTexture(gl, 100, 100, Color.GREEN);
+            modelTexture = ModelLoader.createSolidColorTexture(gl, 100, 100, Color.MAGENTA);
 
             groundTexture = ModelLoader.createSolidColorTexture(gl, 100, 100, new Color(128, 128, 128));
 
@@ -276,6 +277,7 @@ public class UnitTesting
 
             shader.stop(gl);
         }
+
         @Override
         public void reshape(GLAutoDrawable glAutoDrawable, int i, int i1, int i2, int i3)
         { }

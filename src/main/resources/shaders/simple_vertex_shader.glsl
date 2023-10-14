@@ -13,8 +13,8 @@ uniform mat4 mvpMatrix;
 out vec3 worldPosition;
 out vec2 texCoord;
 
-out vec3 worldNormal;
-out vec3 modelNormal;
+flat out vec3 worldNormal;
+flat out vec3 modelNormal;
 
 void main(void)
 {
