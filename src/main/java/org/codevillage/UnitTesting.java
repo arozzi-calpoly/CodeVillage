@@ -153,6 +153,7 @@ public class UnitTesting
                 new GLTestSimpleShaderEventListener(movementController);
         animator.start();
         window.addKeyListener(movementController);
+        window.addMouseListener(movementController);
         window.addGLEventListener(testSimpleShaderEventListener);
     }
 
@@ -166,7 +167,9 @@ public class UnitTesting
 
         private StaticMVPShader shader;
         private Model3D sphereModel;
+        private Model3D groundModel;
         private Texture modelTexture;
+        private Texture groundTexture;
         private Vec3f lightDirection;
         private Vec3f eyePosition;
         private Vec2f eyeRotation;
@@ -180,7 +183,11 @@ public class UnitTesting
 
             sphereModel = RenderingGeometryLib.generateSphereBySubdividingIcosahedron(gl, 4);
 
+            groundModel = RenderingGeometryLib.generateXZGrid(gl, -10, 10, -10, 10, 2, 2);
+
             modelTexture = ModelLoader.createSolidColorTexture(gl, 100, 100, Color.GREEN);
+
+            groundTexture = ModelLoader.createSolidColorTexture(gl, 100, 100, new Color(128, 128, 128));
 
             lightDirection = new Vec3f(1, -1, -1);
 
@@ -226,16 +233,19 @@ public class UnitTesting
 
             // Matrix4f viewMatrix = new Matrix4f().loadIdentity().setToTranslation(new Vec3f(eyePosition).scale(-1));
             Matrix4f viewMatrix = createTransformationMatrix(new Vec3f(eyePosition).scale(-1), -eyeRotation.x(), -eyeRotation.y(), 0, 1);
-            System.out.println(eyePosition);
-            System.out.println(eyeRotation);
-            System.out.println();
+            // System.out.println(eyePosition);
+            // System.out.println(eyeRotation);
+            // System.out.println();
             Matrix4f modelMatrix = new Matrix4f().loadIdentity();
 
             shader.start(gl);
 
-            shader.loadModelViewProjectionMatrices(gl, modelMatrix, viewMatrix, projectionMatrix);
+
             shader.loadEyePosition(gl, eyePosition);
             shader.loadLightDirection(gl, lightDirection);
+
+            // draw the sphere
+            shader.loadModelViewProjectionMatrices(gl, modelMatrix, viewMatrix, projectionMatrix);
             shader.loadModelTexture(gl, modelTexture);
             // bind the VAO
             gl.glBindVertexArray(sphereModel.getVaoID());
@@ -247,6 +257,22 @@ public class UnitTesting
             gl.glDrawElements(GL4.GL_TRIANGLES, sphereModel.getVertexCount(), GL.GL_UNSIGNED_INT, 0);
             sphereModel.disableAllVertexAttributeArrays(gl);
             gl.glBindVertexArray(0);
+
+            Matrix4f groundModelMatrix = new Matrix4f().loadIdentity().setToTranslation(0, -1f, 0);
+            // draw the ground
+            shader.loadModelViewProjectionMatrices(gl, groundModelMatrix, viewMatrix, projectionMatrix);
+            shader.loadModelTexture(gl, groundTexture);
+            // bind the VAO
+            gl.glBindVertexArray(groundModel.getVaoID());
+            // enable all the vertex attributes
+            groundModel.enableAllVertexAttributeArrays(gl);
+            // activate and bind the textures for the model
+            shader.enableAllTextures(gl);
+            // finally, draw all the triangles
+            gl.glDrawElements(GL4.GL_TRIANGLES, groundModel.getVertexCount(), GL.GL_UNSIGNED_INT, 0);
+            groundModel.disableAllVertexAttributeArrays(gl);
+            gl.glBindVertexArray(0);
+
 
             shader.stop(gl);
         }

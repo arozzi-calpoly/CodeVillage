@@ -3,6 +3,7 @@ package org.codevillage;
 import com.jogamp.newt.event.KeyEvent;
 import com.jogamp.newt.event.MouseEvent;
 import com.jogamp.opengl.math.Vec2f;
+import com.jogamp.opengl.math.Vec2i;
 import com.jogamp.opengl.math.Vec3f;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -14,12 +15,14 @@ public class HorizontalMovementController implements MovementController
     protected float translationStepSize;
     protected float rotationStepSize;
 
+    protected boolean isDraggingMouse;
+    protected Vec2f lastMouseDragLocation;
+    protected Vec2f aggregateDragDirection;
+
     protected AtomicBoolean wIsPressed = new AtomicBoolean(false);
     protected AtomicBoolean aIsPressed = new AtomicBoolean(false);
     protected AtomicBoolean sIsPressed = new AtomicBoolean(false);
     protected AtomicBoolean dIsPressed = new AtomicBoolean(false);
-
-
 
     protected AtomicBoolean upIsPressed = new AtomicBoolean(false);
     protected AtomicBoolean downIsPressed = new AtomicBoolean(false);
@@ -33,6 +36,8 @@ public class HorizontalMovementController implements MovementController
     {
         this.translationStepSize = translationStepSize;
         this.rotationStepSize = rotationStepSize;
+        lastMouseDragLocation = new Vec2f(0, 0);
+        aggregateDragDirection = new Vec2f(0, 0);
         // this.boundingBox = null;
     }
 
@@ -44,13 +49,33 @@ public class HorizontalMovementController implements MovementController
     }
     */
 
+    public float getTranslationStepSize()
+    {
+        return translationStepSize;
+    }
+
+    public synchronized void setTranslationStepSize(float translationStepSize)
+    {
+        this.translationStepSize = translationStepSize;
+    }
+
+    public float getRotationStepSize()
+    {
+        return rotationStepSize;
+    }
+
+    public synchronized void setRotationStepSize(float rotationStepSize)
+    {
+        this.rotationStepSize = rotationStepSize;
+    }
+
     @Override
-    public Vec3f getNextPosition(Vec3f currentPosition, Vec2f currentRotationRads)
+    public synchronized Vec3f getNextPosition(Vec3f currentPosition, Vec2f currentRotationRads)
     {
         Vec3f nextPosition = new Vec3f(currentPosition);
         Vec3f forwardVector =
-                MovementController.calculateOpenGLForwardVectorFromPitchAndYaw(currentRotationRads.x(), currentRotationRads.y());
-                // MovementController.calculateOpenGLForwardVectorFromPitchAndYaw(0, currentRotationRads.y());
+                // MovementController.calculateOpenGLForwardVectorFromPitchAndYaw(currentRotationRads.x(), currentRotationRads.y());
+                MovementController.calculateOpenGLForwardVectorFromPitchAndYaw(0, currentRotationRads.y());
 
         Vec3f rightVector = new Vec3f();
         rightVector.cross(forwardVector, UP_VECTOR);
@@ -72,10 +97,15 @@ public class HorizontalMovementController implements MovementController
     }
 
     @Override
-    public Vec2f getNextRotation(Vec3f currentPosition, Vec2f currentRotation)
+    public synchronized Vec2f getNextRotation(Vec3f currentPosition, Vec2f currentRotation)
     {
         float pitchRads = currentRotation.x();
         float yawRads = currentRotation.y();
+
+        Vec2f xyDrag = getAndResetAggregateDragDirection();
+        pitchRads += xyDrag.y() * rotationStepSize;
+        yawRads += xyDrag.x() * rotationStepSize;
+
 
         if(upIsPressed.get())
             pitchRads += rotationStepSize;
@@ -197,21 +227,50 @@ public class HorizontalMovementController implements MovementController
 
     @Override
     public void mousePressed(MouseEvent mouseEvent)
-    { }
+    {
+
+    }
 
     @Override
     public void mouseReleased(MouseEvent mouseEvent)
-    { }
+    {
+        isDraggingMouse = false;
+    }
 
     @Override
     public void mouseMoved(MouseEvent mouseEvent)
-    { }
+    {
+
+    }
 
     @Override
     public void mouseDragged(MouseEvent mouseEvent)
-    { }
+    {
+        if(!isDraggingMouse)
+        {
+            lastMouseDragLocation = new Vec2f(mouseEvent.getX(), mouseEvent.getY());
+            isDraggingMouse = true;
+            return;
+        }
+        Vec2f newMouseDragLocation = new Vec2f(mouseEvent.getX(), mouseEvent.getY());
+        Vec2f dragDirection = new Vec2f(newMouseDragLocation).sub(lastMouseDragLocation);
+        addDragToAggregateDragDirection(dragDirection);
+        lastMouseDragLocation = newMouseDragLocation;
+    }
 
     @Override
     public void mouseWheelMoved(MouseEvent mouseEvent)
     { }
+
+    public synchronized void addDragToAggregateDragDirection(Vec2f dragDirection)
+    {
+        aggregateDragDirection.add(dragDirection);
+    }
+
+    public synchronized Vec2f getAndResetAggregateDragDirection()
+    {
+        Vec2f d = new Vec2f(aggregateDragDirection);
+        aggregateDragDirection = new Vec2f(0, 0);
+        return d;
+    }
 }
