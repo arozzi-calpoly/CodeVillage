@@ -245,7 +245,7 @@ public class UnitTesting
             Matrix4f modelMatrix = createModelTransformationMatrix(
                     new Vec3f(0,1,0),
                     (float) angleX, (float) angleY, (float) angleZ,
-                    (float) cubeScale);
+                    (float) cubeScale, (float) cubeScale, (float) cubeScale);
 
             shader.start(gl);
             shader.loadEyePosition(gl, eyePosition);
@@ -289,7 +289,7 @@ public class UnitTesting
         { }
 
         public static Matrix4f createModelTransformationMatrix(Vec3f translation, float rx, float ry,
-                                                               float rz, float scale)
+                                                               float rz, float scaleX, float scaleY, float scaleZ)
         {
             Matrix4f matrix = new Matrix4f();
             matrix.loadIdentity();
@@ -297,7 +297,7 @@ public class UnitTesting
             matrix.mul(new Matrix4f().setToRotationEuler(rx, 0, 0));
             matrix.mul(new Matrix4f().setToRotationEuler(0, ry, 0));
             matrix.mul(new Matrix4f().setToRotationEuler(0, 0, rz));
-            matrix.scale(scale, new Matrix4f());
+            matrix.scale(scaleX, scaleY, scaleZ, new Matrix4f());
             return matrix;
         }
 
