@@ -10,9 +10,9 @@ public class VerticalMovementController extends HorizontalMovementController
 {
     protected AtomicBoolean spaceBarIsPressed = new AtomicBoolean(false);
     protected AtomicBoolean shiftIsPressed = new AtomicBoolean(false);
-    public VerticalMovementController(float translationStepSize, float rotationStepSize)
+    public VerticalMovementController(float translationStepSize, float keyboardRotationStepSize, float mouseRotationStepSize)
     {
-        super(translationStepSize, rotationStepSize);
+        super(translationStepSize, keyboardRotationStepSize, mouseRotationStepSize);
     }
 
     @Override

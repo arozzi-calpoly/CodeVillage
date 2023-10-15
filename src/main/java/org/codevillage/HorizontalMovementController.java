@@ -3,7 +3,6 @@ package org.codevillage;
 import com.jogamp.newt.event.KeyEvent;
 import com.jogamp.newt.event.MouseEvent;
 import com.jogamp.opengl.math.Vec2f;
-import com.jogamp.opengl.math.Vec2i;
 import com.jogamp.opengl.math.Vec3f;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -13,7 +12,8 @@ public class HorizontalMovementController implements MovementController
     Vec3f UP_VECTOR = new Vec3f(0, 1, 0);
 
     protected float translationStepSize;
-    protected float rotationStepSize;
+    protected float keyboardRotationStepSize;
+    protected float mouseRotationStepSize;
 
     protected boolean isDraggingMouse;
     protected Vec2f lastMouseDragLocation;
@@ -32,13 +32,13 @@ public class HorizontalMovementController implements MovementController
 
     // we eventually want to create a second constructor that accepts a bounding box argument too
     // once the Box class is implemented
-    public HorizontalMovementController(float translationStepSize, float rotationStepSize)
+    public HorizontalMovementController(float translationStepSize, float keyboardRotationStepSize, float mouseRotationStepSize)
     {
         this.translationStepSize = translationStepSize;
-        this.rotationStepSize = rotationStepSize;
-        lastMouseDragLocation = new Vec2f(0, 0);
-        aggregateDragDirection = new Vec2f(0, 0);
-        // this.boundingBox = null;
+        this.keyboardRotationStepSize = keyboardRotationStepSize;
+        this.mouseRotationStepSize = mouseRotationStepSize;
+        this.lastMouseDragLocation = new Vec2f(0, 0);
+        this.aggregateDragDirection = new Vec2f(0, 0);
     }
 
     /*
@@ -59,14 +59,14 @@ public class HorizontalMovementController implements MovementController
         this.translationStepSize = translationStepSize;
     }
 
-    public float getRotationStepSize()
+    public float getKeyboardRotationStepSize()
     {
-        return rotationStepSize;
+        return keyboardRotationStepSize;
     }
 
-    public synchronized void setRotationStepSize(float rotationStepSize)
+    public synchronized void setKeyboardRotationStepSize(float keyboardRotationStepSize)
     {
-        this.rotationStepSize = rotationStepSize;
+        this.keyboardRotationStepSize = keyboardRotationStepSize;
     }
 
     @Override
@@ -103,20 +103,20 @@ public class HorizontalMovementController implements MovementController
         float yawRads = currentRotation.y();
 
         Vec2f xyDrag = getAndResetAggregateDragDirection();
-        pitchRads += xyDrag.y() * rotationStepSize;
-        yawRads += xyDrag.x() * rotationStepSize;
+        pitchRads += xyDrag.y() * mouseRotationStepSize;
+        yawRads += xyDrag.x() * mouseRotationStepSize;
 
 
         if(upIsPressed.get())
-            pitchRads += rotationStepSize;
+            pitchRads += keyboardRotationStepSize;
         if(downIsPressed.get())
-            pitchRads -= rotationStepSize;
+            pitchRads -= keyboardRotationStepSize;
 
         if(leftIsPressed.get())
-            yawRads += rotationStepSize;
+            yawRads += keyboardRotationStepSize;
 
         if(rightIsPressed.get())
-            yawRads -= rotationStepSize;
+            yawRads -= keyboardRotationStepSize;
 
         return new Vec2f(pitchRads, yawRads);
     }

@@ -239,17 +239,10 @@ public class UnitTesting
             double angleY = (Math.sin(5.*angle + 17) + Math.sin(2.*angle + 13) + Math.sin(7.*angle + 11)) / 3 * 2 * Math.PI;
             double angleZ = (Math.sin(5.*angle + 13) + Math.sin(2.*angle + 11) + Math.sin(7.*angle + 17)) / 3 * 2 * Math.PI;
 
-            double translationPathAngle = (System.currentTimeMillis() / 1000.0) % (2 * Math.PI);
-            double translationPathRadius = 2 + 0.5;
-            double cubeCenterX = translationPathRadius * Math.cos(translationPathAngle) + translationPathRadius;
-            double cubeCenterY = translationPathRadius * Math.sin(translationPathAngle);
-
             double cubeScaleAngle = (System.currentTimeMillis() / 1000.0) % (2 * Math.PI);
             double cubeScale = Math.sin(cubeScaleAngle) * 0.5 + 0.55;
-            // angleX = angleY = angleZ = 0;
 
             Matrix4f modelMatrix = createModelTransformationMatrix(
-                    //new Vec3f((float) cubeCenterX, (float) cubeCenterY, 0),
                     new Vec3f(0,1,0),
                     (float) angleX, (float) angleY, (float) angleZ,
                     (float) cubeScale);
