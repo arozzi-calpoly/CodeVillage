@@ -254,7 +254,13 @@ public class UnitTesting {
 
       // Render multiple cubes
       for (Vec3f cubePosition : cubePositions) {
-        Matrix4f modelMatrix = new Matrix4f().loadIdentity().translate(cubePosition, new Matrix4f());
+
+        float yScale = cubePosition.y() + 1.0f;
+
+        Matrix4f modelMatrix = new Matrix4f()
+            .loadIdentity()
+            .translate(cubePosition, new Matrix4f())
+            .scale(yScale, new Matrix4f());
 
         shader.start(gl);
         shader.loadModelViewProjectionMatrices(gl, modelMatrix, viewMatrix, projectionMatrix);
