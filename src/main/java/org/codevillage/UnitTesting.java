@@ -15,6 +15,9 @@ import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.nio.file.Path;
 
+import java.util.List;
+import java.util.ArrayList;
+
 public class UnitTesting {
   /*
    * public static void testHorizontalMovementControllerKeyPresses()
@@ -167,13 +170,31 @@ public class UnitTesting {
     }
 
     private StaticMVPShader shader;
-    private Model3D sphereModel;
+    private Model3D cubeModel;
     private Model3D groundModel;
     private Texture modelTexture;
     private Texture groundTexture;
     private Vec3f lightDirection;
     private Vec3f eyePosition;
     private Vec2f eyeRotation;
+    private List<Vec3f> cubePositions;
+
+    private List<Vec3f> generateCubePositions(int columns, int rows, float spacing) {
+      List<Vec3f> cubePositions = new ArrayList<>();
+
+      float startX = -((columns - 1) * spacing) / 2.0f;
+      float startZ = -((rows - 1) * spacing) / 2.0f;
+
+      for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < columns; j++) {
+          float x = startX + j * spacing;
+          float z = startZ + i * spacing;
+          cubePositions.add(new Vec3f(x, 0.0f, z));
+        }
+      }
+
+      return cubePositions;
+    }
 
     @Override
     public void init(GLAutoDrawable glAutoDrawable) {
@@ -184,7 +205,7 @@ public class UnitTesting {
 
       // sphereModel = RenderingGeometryLib.generateSphereBySubdividingIcosahedron(gl,
       // 4);
-      sphereModel = RenderingGeometryLib.generateCubeModel(gl);
+      cubeModel = RenderingGeometryLib.generateCubeModel(gl);
 
       groundModel = RenderingGeometryLib.generateXZGrid(gl, -10, 10, -10, 10, 2, 2);
 
@@ -197,6 +218,8 @@ public class UnitTesting {
       eyePosition = new Vec3f(0, 0, 3);
 
       eyeRotation = new Vec2f(0, 0);
+
+      cubePositions = generateCubePositions(5, 5, 5);
     }
 
     @Override
@@ -214,72 +237,56 @@ public class UnitTesting {
       GL4 gl = glAutoDrawable.getGL().getGL4();
       gl.glClearColor(0, 0, 0, 1);
       gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
-      // configs alpha blending settings
       gl.glEnable(GL.GL_BLEND);
       gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
-      // turns on depth testing
       gl.glEnable(GL.GL_DEPTH_TEST);
-      // enables multi-sample antialiasing (if the GLCapabilities object set it up)
       gl.glEnable(GL.GL_MULTISAMPLE);
 
       eyePosition = movementController.getNextPosition(eyePosition, eyeRotation);
       eyeRotation = movementController.getNextRotation(eyePosition, eyeRotation);
 
-      // Matrix4f projectionMatrix = new
-      // Matrix4f().loadIdentity().setToPerspective((float)Math.toRadians(90.0f),
-      // 1280.0f/720.0f, 0.1f, 1000.0f);
-
-      // left=-width/2, right=+width/2, bottom=-height/2 and top=+height/2;
-      // projectionMatrix.setToOrtho(-width/2, +width/2, -height/2, +height/2, 0.1f,
-      // 100f);
       Matrix4f projectionMatrix = new Matrix4f().loadIdentity();
-      projectionMatrix.setToPerspective(FovHVHalves.byRadians((float) (Math.PI / 2), (float) (Math.PI / 2)),
-          0.1f, 100f);
+      projectionMatrix.setToPerspective(FovHVHalves.byRadians((float) (Math.PI / 2), (float) (Math.PI / 2)), 0.1f,
+          100f);
 
-      // Matrix4f viewMatrix = new Matrix4f().loadIdentity().setToTranslation(new
-      // Vec3f(eyePosition).scale(-1));
       Matrix4f viewMatrix = createTransformationMatrix(new Vec3f(eyePosition).scale(-1), -eyeRotation.x(),
           -eyeRotation.y(), 0, 1);
-      // System.out.println(eyePosition);
-      // System.out.println(eyeRotation);
-      // System.out.println();
+
+      // Render multiple cubes
+      for (Vec3f cubePosition : cubePositions) {
+        Matrix4f modelMatrix = new Matrix4f().loadIdentity().translate(cubePosition, new Matrix4f());
+
+        shader.start(gl);
+        shader.loadModelViewProjectionMatrices(gl, modelMatrix, viewMatrix, projectionMatrix);
+        shader.loadModelTexture(gl, modelTexture);
+        shader.loadLightDirection(gl, lightDirection);
+
+        gl.glBindVertexArray(cubeModel.getVaoID());
+        cubeModel.enableAllVertexAttributeArrays(gl);
+        shader.enableAllTextures(gl);
+        gl.glDrawElements(GL4.GL_TRIANGLES, cubeModel.getVertexCount(), GL.GL_UNSIGNED_INT, 0);
+        cubeModel.disableAllVertexAttributeArrays(gl);
+        gl.glBindVertexArray(0);
+
+        shader.stop(gl);
+      }
+
       Matrix4f modelMatrix = new Matrix4f().loadIdentity();
 
       shader.start(gl);
-
-      shader.loadEyePosition(gl, eyePosition);
-      shader.loadLightDirection(gl, lightDirection);
-
-      // draw the sphere
       shader.loadModelViewProjectionMatrices(gl, modelMatrix, viewMatrix, projectionMatrix);
       shader.loadModelTexture(gl, modelTexture);
-      // bind the VAO
-      gl.glBindVertexArray(sphereModel.getVaoID());
-      // enable all the vertex attributes
-      sphereModel.enableAllVertexAttributeArrays(gl);
-      // activate and bind the textures for the model
-      shader.enableAllTextures(gl);
-      // finally, draw all the triangles
-      gl.glDrawElements(GL4.GL_TRIANGLES, sphereModel.getVertexCount(), GL.GL_UNSIGNED_INT, 0);
-      sphereModel.disableAllVertexAttributeArrays(gl);
-      gl.glBindVertexArray(0);
+      shader.loadLightDirection(gl, lightDirection);
 
-      Matrix4f groundModelMatrix = new Matrix4f().loadIdentity().setToTranslation(0, -1f, 0);
-      // draw the ground
-      shader.loadModelViewProjectionMatrices(gl, groundModelMatrix, viewMatrix, projectionMatrix);
-      shader.loadModelTexture(gl, groundTexture);
-      // bind the VAO
-      gl.glBindVertexArray(groundModel.getVaoID());
-      // enable all the vertex attributes
+      gl.glBindVertexArray(cubeModel.getVaoID());
       groundModel.enableAllVertexAttributeArrays(gl);
-      // activate and bind the textures for the model
       shader.enableAllTextures(gl);
-      // finally, draw all the triangles
       gl.glDrawElements(GL4.GL_TRIANGLES, groundModel.getVertexCount(), GL.GL_UNSIGNED_INT, 0);
       groundModel.disableAllVertexAttributeArrays(gl);
       gl.glBindVertexArray(0);
 
       shader.stop(gl);
+
     }
 
     @Override
@@ -299,61 +306,65 @@ public class UnitTesting {
     }
   }
 
-  public static void testGraphicsWindowCreation() {
-    GLProfile glProfile = GLProfile.get(GLProfile.GL4);
-
-    GLCapabilities glCapabilities = new GLCapabilities(glProfile);
-    glCapabilities.setDoubleBuffered(true);
-    glCapabilities.setHardwareAccelerated(true);
-
-    String windowTitle = "Window Creation Test";
-    Display display = NewtFactory.createDisplay(windowTitle);
-    Screen screen = NewtFactory.createScreen(display, 0);
-
-    int WINDOW_WIDTH = 800, WINDOW_HEIGHT = 600;
-    GLWindow window = GLWindow.create(screen, glCapabilities);
-    window.setTitle(windowTitle);
-    window.setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
-    window.setVisible(true);
-
-    FPSAnimator animator = new FPSAnimator(window, 30);
-    GLTestWindowCreationEventListener windowCreationEventListener = new GLTestWindowCreationEventListener();
-    animator.start();
-    // window.addKeyListener(windowCreationEventListener);
-    window.addGLEventListener(windowCreationEventListener);
-  }
-
-  private static class GLTestWindowCreationEventListener implements GLEventListener {
-    @Override
-    public void init(GLAutoDrawable glAutoDrawable) {
-    }
-
-    @Override
-    public void dispose(GLAutoDrawable glAutoDrawable) {
-      System.out.println("Disposed");
-      // Free the VAOs, textures, whatever resources you were using with the GL4
-      // instance
-      // given by 'glAutoDrawable.getGL().getGL4()'
-      System.exit(0);
-    }
-
-    @Override
-    public void display(GLAutoDrawable glAutoDrawable) {
-      GL4 gl = glAutoDrawable.getGL().getGL4();
-      double redComponent = Math.sin(System.currentTimeMillis() / 1000.0 * Math.PI) * 0.5 + 0.5;
-      gl.glClearColor((float) redComponent, 0, 0, 0);
-      gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
-      // configs alpha blending settings
-      gl.glEnable(GL.GL_BLEND);
-      gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
-      // turns on depth testing
-      gl.glEnable(GL.GL_DEPTH_TEST);
-      // enables multi-sample antialiasing (if the GLCapabilities object set it up)
-      gl.glEnable(GL.GL_MULTISAMPLE);
-    }
-
-    @Override
-    public void reshape(GLAutoDrawable glAutoDrawable, int i, int i1, int i2, int i3) {
-    }
-  }
+  // public static void testGraphicsWindowCreation() {
+  // GLProfile glProfile = GLProfile.get(GLProfile.GL4);
+  //
+  // GLCapabilities glCapabilities = new GLCapabilities(glProfile);
+  // glCapabilities.setDoubleBuffered(true);
+  // glCapabilities.setHardwareAccelerated(true);
+  //
+  // String windowTitle = "Window Creation Test";
+  // Display display = NewtFactory.createDisplay(windowTitle);
+  // Screen screen = NewtFactory.createScreen(display, 0);
+  //
+  // int WINDOW_WIDTH = 800, WINDOW_HEIGHT = 600;
+  // GLWindow window = GLWindow.create(screen, glCapabilities);
+  // window.setTitle(windowTitle);
+  // window.setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
+  // window.setVisible(true);
+  //
+  // FPSAnimator animator = new FPSAnimator(window, 30);
+  // GLTestWindowCreationEventListener windowCreationEventListener = new
+  // GLTestWindowCreationEventListener();
+  // animator.start();
+  // // window.addKeyListener(windowCreationEventListener);
+  // window.addGLEventListener(windowCreationEventListener);
+  // }
+  //
+  // private static class GLTestWindowCreationEventListener implements
+  // GLEventListener {
+  // @Override
+  // public void init(GLAutoDrawable glAutoDrawable) {
+  // }
+  //
+  // @Override
+  // public void dispose(GLAutoDrawable glAutoDrawable) {
+  // System.out.println("Disposed");
+  // // Free the VAOs, textures, whatever resources you were using with the GL4
+  // // instance
+  // // given by 'glAutoDrawable.getGL().getGL4()'
+  // System.exit(0);
+  // }
+  //
+  // @Override
+  // public void display(GLAutoDrawable glAutoDrawable) {
+  // GL4 gl = glAutoDrawable.getGL().getGL4();
+  // double redComponent = Math.sin(System.currentTimeMillis() / 1000.0 * Math.PI)
+  // * 0.5 + 0.5;
+  // gl.glClearColor((float) redComponent, 0, 0, 0);
+  // gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
+  // // configs alpha blending settings
+  // gl.glEnable(GL.GL_BLEND);
+  // gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
+  // // turns on depth testing
+  // gl.glEnable(GL.GL_DEPTH_TEST);
+  // // enables multi-sample antialiasing (if the GLCapabilities object set it up)
+  // gl.glEnable(GL.GL_MULTISAMPLE);
+  // }
+  //
+  // @Override
+  // public void reshape(GLAutoDrawable glAutoDrawable, int i, int i1, int i2, int
+  // i3) {
+  // }
+  // }
 }
