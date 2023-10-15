@@ -8,10 +8,6 @@ import com.jogamp.opengl.*;
 import com.jogamp.opengl.math.*;
 import com.jogamp.opengl.util.FPSAnimator;
 
-import javax.swing.*;
-import javax.swing.border.CompoundBorder;
-import javax.swing.border.EmptyBorder;
-import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.nio.file.Path;
 
@@ -190,9 +186,9 @@ public class UnitTesting
 
             groundTexture = ModelLoader.createSolidColorTexture(gl, 100, 100, new Color(128, 128, 128));
 
-            lightDirection = new Vec3f(1, -1, -1);
+            lightDirection = new Vec3f(1, -1, -2);
 
-            eyePosition = new Vec3f(0, 0, 3);
+            eyePosition = new Vec3f(0, 0.05f, 3);
 
             eyeRotation = new Vec2f(0, 0);
         }
@@ -233,15 +229,32 @@ public class UnitTesting
                     0.1f, 100f);
 
             // Matrix4f viewMatrix = new Matrix4f().loadIdentity().setToTranslation(new Vec3f(eyePosition).scale(-1));
-            Matrix4f viewMatrix = createTransformationMatrix(new Vec3f(eyePosition).scale(-1), -eyeRotation.x(), -eyeRotation.y(), 0, 1);
+            Matrix4f viewMatrix = createViewMatrixFromEye(eyePosition, eyeRotation);
             // System.out.println(eyePosition);
             // System.out.println(eyeRotation);
             // System.out.println();
-            Matrix4f modelMatrix = new Matrix4f().loadIdentity();
+
+            double angle = (System.currentTimeMillis() / 1000.0 * 0.15) % (2 * Math.PI);
+            double angleX = (Math.sin(5.*angle + 11) + Math.sin(2.*angle + 17) + Math.sin(7.*angle + 13)) / 3 * 2 * Math.PI;
+            double angleY = (Math.sin(5.*angle + 17) + Math.sin(2.*angle + 13) + Math.sin(7.*angle + 11)) / 3 * 2 * Math.PI;
+            double angleZ = (Math.sin(5.*angle + 13) + Math.sin(2.*angle + 11) + Math.sin(7.*angle + 17)) / 3 * 2 * Math.PI;
+
+            double translationPathAngle = (System.currentTimeMillis() / 1000.0) % (2 * Math.PI);
+            double translationPathRadius = 2 + 0.5;
+            double cubeCenterX = translationPathRadius * Math.cos(translationPathAngle) + translationPathRadius;
+            double cubeCenterY = translationPathRadius * Math.sin(translationPathAngle);
+
+            double cubeScaleAngle = (System.currentTimeMillis() / 1000.0) % (2 * Math.PI);
+            double cubeScale = Math.sin(cubeScaleAngle) * 0.5 + 0.55;
+            // angleX = angleY = angleZ = 0;
+
+            Matrix4f modelMatrix = createModelTransformationMatrix(
+                    //new Vec3f((float) cubeCenterX, (float) cubeCenterY, 0),
+                    new Vec3f(0,1,0),
+                    (float) angleX, (float) angleY, (float) angleZ,
+                    (float) cubeScale);
 
             shader.start(gl);
-
-
             shader.loadEyePosition(gl, eyePosition);
             shader.loadLightDirection(gl, lightDirection);
 
@@ -282,16 +295,26 @@ public class UnitTesting
         public void reshape(GLAutoDrawable glAutoDrawable, int i, int i1, int i2, int i3)
         { }
 
-        public static Matrix4f createTransformationMatrix(Vec3f translation, float rx, float ry,
-                                                          float rz, float scale)
+        public static Matrix4f createModelTransformationMatrix(Vec3f translation, float rx, float ry,
+                                                               float rz, float scale)
         {
             Matrix4f matrix = new Matrix4f();
             matrix.loadIdentity();
-            matrix.scale(scale, new Matrix4f());
+            matrix.translate(translation, new Matrix4f());
             matrix.mul(new Matrix4f().setToRotationEuler(rx, 0, 0));
             matrix.mul(new Matrix4f().setToRotationEuler(0, ry, 0));
             matrix.mul(new Matrix4f().setToRotationEuler(0, 0, rz));
-            matrix.translate(translation, new Matrix4f());
+            matrix.scale(scale, new Matrix4f());
+            return matrix;
+        }
+
+        public static Matrix4f createViewMatrixFromEye(Vec3f eyePosition, Vec2f eyeRotation)
+        {
+            Matrix4f matrix = new Matrix4f();
+            matrix.loadIdentity();
+            matrix.mul(new Matrix4f().setToRotationEuler(-eyeRotation.x(), 0, 0));
+            matrix.mul(new Matrix4f().setToRotationEuler(0, -eyeRotation.y(), 0));
+            matrix.translate(new Vec3f(eyePosition).scale(-1), new Matrix4f());
             return matrix;
         }
     }
