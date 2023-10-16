@@ -177,11 +177,11 @@ public class UnitTesting
         public void init(GLAutoDrawable glAutoDrawable)
         {
             GL4 gl = glAutoDrawable.getGL().getGL4();
-            String vertexShaderPath = "C:\\Users\\trozz\\OneDrive\\CalPoly\\SoftwareEngineeringII\\CodeVillage\\src\\main\\resources\\shaders\\simple_vertex_shader.glsl";
-            String fragmentShaderPath = "C:\\Users\\trozz\\OneDrive\\CalPoly\\SoftwareEngineeringII\\CodeVillage\\src\\main\\resources\\shaders\\simple_fragment_shader.glsl";
+            String vertexShaderPath = "C:\\Users\\sugoi\\Documents\\509\\sample\\CodeVillage\\src\\main\\resources\\shaders\\simple_vertex_shader.glsl";
+            String fragmentShaderPath = "C:\\Users\\sugoi\\Documents\\509\\sample\\CodeVillage\\src\\main\\resources\\shaders\\simple_fragment_shader.glsl";
             shader = new StaticMVPShader(gl, Path.of(vertexShaderPath), Path.of(fragmentShaderPath));
 
-            sphereModel = RenderingGeometryLib.generateSphereBySubdividingIcosahedron(gl, 4);
+            sphereModel = RenderingGeometryLib.generateCubeModel(gl);
 
             groundModel = RenderingGeometryLib.generateXZGrid(gl, -10, 10, -10, 10, 2, 2);
 

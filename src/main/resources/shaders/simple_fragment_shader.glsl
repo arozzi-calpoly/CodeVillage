@@ -7,8 +7,8 @@ uniform vec3 lightDirection;
 in vec3 worldPosition;
 in vec2 texCoord;
 
-in vec3 worldNormal;
-in vec3 modelNormal;
+flat in vec3 worldNormal;
+flat in vec3 modelNormal;
 
 out vec4 out_Color;
 
