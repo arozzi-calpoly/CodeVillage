@@ -4,22 +4,23 @@ import com.jogamp.opengl.GL4;
 import com.jogamp.opengl.math.Matrix4f;
 import com.jogamp.opengl.math.Vec3f;
 
+import java.awt.*;
+
 public class Box {
     private Vec3f position;
-    private float x;
     private float y;
-    private float z;
     private boolean isSelected;
+    private Color color;
 
-    public Box(Vec3f position, float x, float y, float z) {
+    public Box(Vec3f position, float y, Color color) {
         this.position = position;
-        this.x = x;
         this.y = y;
-        this.z = z;
+        this.color = color;
         isSelected = false;
     }
 
-    public void draw(GL4 gl, StaticMVPShader shader, Matrix4f viewMatrix, Matrix4f projectionMatrix, Texture modelTexture, Vec3f lightDirection, Model3D cubeModel) {
+    public void draw(GL4 gl, StaticMVPShader shader, Matrix4f viewMatrix, Matrix4f projectionMatrix,
+                     Texture modelTexture, Vec3f lightDirection, Model3D cubeModel) {
         Matrix4f modelMatrix = new Matrix4f()
                 .loadIdentity()
                 .translate(position, new Matrix4f())

@@ -191,7 +191,7 @@ public class UnitTesting {
           float z = startZ + i * spacing;
           float y = 0.0f;
 
-          Box box = new Box(new Vec3f(x, y, z), x, 1.0f, z);
+          Box box = new Box(new Vec3f(x, y, z), 1.0f, Color.RED);
 
           cubePositions.add(box);
         }
