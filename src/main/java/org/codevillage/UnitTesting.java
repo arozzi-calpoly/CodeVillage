@@ -177,10 +177,10 @@ public class UnitTesting {
     private Vec3f lightDirection;
     private Vec3f eyePosition;
     private Vec2f eyeRotation;
-    private List<Vec3f> cubePositions;
+    private List<Box> cubePositions;
 
-    private List<Vec3f> generateCubePositions(int columns, int rows, float spacing) {
-      List<Vec3f> cubePositions = new ArrayList<>();
+    private List<Box> generateCubePositions(int columns, int rows, float spacing) {
+      List<Box> cubePositions = new ArrayList<>();
 
       float startX = -((columns - 1) * spacing) / 2.0f;
       float startZ = -((rows - 1) * spacing) / 2.0f;
@@ -189,7 +189,11 @@ public class UnitTesting {
         for (int j = 0; j < columns; j++) {
           float x = startX + j * spacing;
           float z = startZ + i * spacing;
-          cubePositions.add(new Vec3f(x, 0.0f, z));
+          float y = 0.0f;
+
+          Box box = new Box(new Vec3f(x, y, z), x, 1.0f, z);
+
+          cubePositions.add(box);
         }
       }
 
@@ -199,8 +203,8 @@ public class UnitTesting {
     @Override
     public void init(GLAutoDrawable glAutoDrawable) {
       GL4 gl = glAutoDrawable.getGL().getGL4();
-      String vertexShaderPath = "/Users/khoaly/Desktop/projects/CodeVillage/src/main/resources/shaders/simple_vertex_shader.glsl";
-      String fragmentShaderPath = "/Users/khoaly/Desktop/projects/CodeVillage/src/main/resources/shaders/simple_fragment_shader.glsl";
+      String vertexShaderPath = "/Users/abrahamdev/Desktop/csc509/csc509-visuals/src/main/resources/shaders/simple_vertex_shader.glsl";
+      String fragmentShaderPath = "/Users/abrahamdev/Desktop/csc509/csc509-visuals/src/main/resources/shaders/simple_fragment_shader.glsl";
       shader = new StaticMVPShader(gl, Path.of(vertexShaderPath), Path.of(fragmentShaderPath));
 
       // sphereModel = RenderingGeometryLib.generateSphereBySubdividingIcosahedron(gl,
@@ -253,28 +257,8 @@ public class UnitTesting {
           -eyeRotation.y(), 0, 1);
 
       // Render multiple cubes
-      for (Vec3f cubePosition : cubePositions) {
-
-        float yScale = cubePosition.y() + 1.0f;
-
-        Matrix4f modelMatrix = new Matrix4f()
-            .loadIdentity()
-            .translate(cubePosition, new Matrix4f())
-            .scale(yScale, new Matrix4f());
-
-        shader.start(gl);
-        shader.loadModelViewProjectionMatrices(gl, modelMatrix, viewMatrix, projectionMatrix);
-        shader.loadModelTexture(gl, modelTexture);
-        shader.loadLightDirection(gl, lightDirection);
-
-        gl.glBindVertexArray(cubeModel.getVaoID());
-        cubeModel.enableAllVertexAttributeArrays(gl);
-        shader.enableAllTextures(gl);
-        gl.glDrawElements(GL4.GL_TRIANGLES, cubeModel.getVertexCount(), GL.GL_UNSIGNED_INT, 0);
-        cubeModel.disableAllVertexAttributeArrays(gl);
-        gl.glBindVertexArray(0);
-
-        shader.stop(gl);
+      for (Box cubePosition : cubePositions) {
+        cubePosition.draw(gl, shader, viewMatrix, projectionMatrix, modelTexture, lightDirection, cubeModel);
       }
 
       Matrix4f modelMatrix = new Matrix4f().loadIdentity();
