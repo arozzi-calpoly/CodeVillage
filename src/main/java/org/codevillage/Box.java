@@ -1,5 +1,6 @@
 package org.codevillage;
 
+<<<<<<< HEAD
 import com.jogamp.opengl.GL;
 import com.jogamp.opengl.GL4;
 import com.jogamp.opengl.math.Matrix4f;
@@ -10,16 +11,36 @@ import java.awt.*;
 public class Box
 {
     private Vec3f position;
-    private float y;
+    private Vec3f size;
     private boolean isSelected;
     private Color color;
 
-    public Box(Vec3f position, float y, Color color)
+    public Box(Vec3f position, Vec3f size, Color color)
     {
         this.position = position;
-        this.y = y;
+        this.size = size;
         this.color = color;
-        isSelected = false;
+        this.isSelected = false;
+    }
+
+    public Vec3f getPosition()
+    {
+        return position;
+    }
+
+    public Vec3f getSize()
+    {
+        return size;
+    }
+
+    public void setPosition(Vec3f position)
+    {
+        this.position = position;
+    }
+
+    public void setSize(Vec3f size)
+    {
+        this.size = size;
     }
 
     public void draw(GL4 gl, StaticMVPShader shader, Matrix4f viewMatrix, Matrix4f projectionMatrix,
@@ -28,7 +49,7 @@ public class Box
         Matrix4f modelMatrix = new Matrix4f()
                 .loadIdentity()
                 .translate(position, new Matrix4f())
-                .scale(y, new Matrix4f());
+                .scale(size.x(), size.y(), size.z(), new Matrix4f());
 
         shader.loadModelViewProjectionMatrices(gl, modelMatrix, viewMatrix, projectionMatrix);
         shader.loadModelColor(gl, this.color);
