@@ -228,11 +228,7 @@ public class UnitTesting
             projectionMatrix.setToPerspective(FovHVHalves.byRadians((float) (Math.PI / 2), (float) (Math.PI / 2)),
                     0.1f, 100f);
 
-            // Matrix4f viewMatrix = new Matrix4f().loadIdentity().setToTranslation(new Vec3f(eyePosition).scale(-1));
             Matrix4f viewMatrix = createViewMatrixFromEye(eyePosition, eyeRotation);
-            // System.out.println(eyePosition);
-            // System.out.println(eyeRotation);
-            // System.out.println();
 
             double angle = (System.currentTimeMillis() / 1000.0 * 0.15) % (2 * Math.PI);
             double angleX = (Math.sin(5.*angle + 11) + Math.sin(2.*angle + 17) + Math.sin(7.*angle + 13)) / 3 * 2 * Math.PI;
