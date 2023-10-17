@@ -9,6 +9,15 @@ repositories {
     mavenCentral()
 }
 
+java.sourceSets["main"].java {
+    srcDir("src/main/java")
+}
+
+java.sourceSets["main"].resources {
+    srcDir("src/main/resources")
+}
+
+
 
 dependencies {
     implementation("java3d:j3d-core:1.3.1")
@@ -28,4 +37,4 @@ tasks.jar {
     manifest {
         attributes["Main-Class"] = "org.codevillage.Main"
     }
-  }
+}
