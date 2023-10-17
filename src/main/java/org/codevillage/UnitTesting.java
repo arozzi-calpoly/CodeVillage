@@ -15,6 +15,7 @@ import java.awt.*;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class UnitTesting
 {
@@ -188,13 +189,14 @@ public class UnitTesting
             float startX = -((columns - 1) * spacing) / 2.0f;
             float startZ = -((rows - 1) * spacing) / 2.0f;
 
+            Random rand = new Random(0); // constant seed so that the colors are the same each run
             for (int i = 0; i < rows; i++) {
                 for (int j = 0; j < columns; j++) {
                     float x = startX + j * spacing;
                     float z = startZ + i * spacing;
                     float y = 0.0f;
 
-                    Box box = new Box(new Vec3f(x, y, z), 1.0f, Color.RED);
+                    Box box = new Box(new Vec3f(x, y, z), 1.0f, Color.getHSBColor(rand.nextFloat(), 1, 1));
 
                     cubePositions.add(box);
                 }
