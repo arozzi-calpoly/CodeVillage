@@ -3,6 +3,7 @@
 uniform sampler2D textureSampler;
 uniform vec3 eyePosition;
 uniform vec3 lightDirection;
+uniform vec3 modelColor;
 
 in vec3 worldPosition;
 in vec2 texCoord;
@@ -15,8 +16,7 @@ out vec4 out_Color;
 void main(void)
 {
     // out_Color = vec4(texture(textureSampler, texCoord).xyz, 1);
-
-    vec3 modelColor = texture(textureSampler, texCoord).xyz;
+    // vec3 modelColor = texture(textureSampler, texCoord).xyz;
     vec3 lightColor = vec3(1, 1, 1);
     float specularStrength = 0.6;
     float ambientStrength = 0.15;

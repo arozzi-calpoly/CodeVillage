@@ -2,6 +2,7 @@ plugins {
     id("java")
 }
 
+
 group = "org.codevillage"
 version = "1.0-SNAPSHOT"
 
@@ -16,8 +17,6 @@ java.sourceSets["main"].java {
 java.sourceSets["main"].resources {
     srcDir("src/main/resources")
 }
-
-
 
 dependencies {
     implementation("java3d:j3d-core:1.3.1")
@@ -37,4 +36,8 @@ tasks.jar {
     manifest {
         attributes["Main-Class"] = "org.codevillage.Main"
     }
+}
+
+tasks.withType<ProcessResources>() {
+    duplicatesStrategy = DuplicatesStrategy.WARN
 }

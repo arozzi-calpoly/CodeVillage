@@ -262,18 +262,18 @@ public class UnitTesting
 
             Matrix4f viewMatrix = createViewMatrixFromEye(eyePosition, eyeRotation);
 
+            shader.start(gl);
+            shader.loadModelTexture(gl, modelTexture);
+            shader.loadLightDirection(gl, lightDirection);
             // Render multiple cubes
             for (Box cubePosition : cubePositions) {
                 cubePosition.draw(gl, shader, viewMatrix, projectionMatrix, modelTexture, lightDirection, cubeModel);
             }
 
             Matrix4f modelMatrix = new Matrix4f().loadIdentity();
-
-            shader.start(gl);
             shader.loadModelViewProjectionMatrices(gl, modelMatrix, viewMatrix, projectionMatrix);
             shader.loadModelTexture(gl, modelTexture);
             shader.loadLightDirection(gl, lightDirection);
-
             gl.glBindVertexArray(cubeModel.getVaoID());
             groundModel.enableAllVertexAttributeArrays(gl);
             shader.enableAllTextures(gl);

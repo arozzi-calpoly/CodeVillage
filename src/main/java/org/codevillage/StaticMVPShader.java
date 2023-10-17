@@ -4,6 +4,7 @@ import com.jogamp.opengl.GL4;
 import com.jogamp.opengl.math.Matrix4f;
 import com.jogamp.opengl.math.Vec3f;
 
+import java.awt.*;
 import java.io.InputStream;
 import java.nio.file.Path;
 
@@ -18,12 +19,15 @@ public class StaticMVPShader extends Shader
     private int lightDirectionLocation;
     private int modelTextureID;
     private int modelTextureLocation;
+    private int modelColorLocation;
 
-    public StaticMVPShader(GL4 gl, Path vertexShaderFilepath, Path fragmentShaderFilepath) {
+    public StaticMVPShader(GL4 gl, Path vertexShaderFilepath, Path fragmentShaderFilepath)
+    {
         super(gl, vertexShaderFilepath, fragmentShaderFilepath);
     }
 
-    public StaticMVPShader(GL4 gl, InputStream vertexShaderStream, InputStream fragmentShaderStream) {
+    public StaticMVPShader(GL4 gl, InputStream vertexShaderStream, InputStream fragmentShaderStream)
+    {
         super(gl, vertexShaderStream, fragmentShaderStream);
     }
 
@@ -50,7 +54,7 @@ public class StaticMVPShader extends Shader
     {
         Vec3f lightDirectionUnit = new Vec3f(lightDirection).normalize();
         super.loadVec3(gl, this.lightDirectionLocation,
-                lightDirectionUnit.x(),lightDirectionUnit.y(),
+                lightDirectionUnit.x(), lightDirectionUnit.y(),
                 lightDirectionUnit.z());
     }
 
@@ -59,6 +63,12 @@ public class StaticMVPShader extends Shader
         this.modelTextureID = texture.getTextureID();
         // we're only using one texture, we just load the constant 0
         super.loadInt(gl, this.modelTextureLocation, 0);
+    }
+
+    public void loadModelColor(GL4 gl, Color color)
+    {
+        super.loadVec3(gl, modelColorLocation, color.getRed() / 255.0f, color.getGreen() / 255.0f,
+                color.getBlue() / 255.0f);
     }
 
     @Override
@@ -72,6 +82,7 @@ public class StaticMVPShader extends Shader
         this.eyePositionLocation = super.getUniformLocation(gl, "eyePosition", false);
         this.lightDirectionLocation = super.getUniformLocation(gl, "lightDirection", false);
         this.modelTextureLocation = super.getUniformLocation(gl, "textureSampler", false);
+        this.modelColorLocation = super.getUniformLocation(gl, "modelColor", false);
     }
 
     @Override
