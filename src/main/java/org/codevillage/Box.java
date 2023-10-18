@@ -12,9 +12,10 @@ public class Box
     private static Model3D cubeMesh;
     private Vec3f position;
     private Vec3f size;
-
     private boolean isSelected;
     private Color color;
+
+    private boolean isVisible;
 
     public Box(Vec3f position, Vec3f size, Color color)
     {
@@ -22,6 +23,17 @@ public class Box
         this.size = size;
         this.color = color;
         this.isSelected = false;
+        this.isVisible = true;
+    }
+
+    public boolean isVisible()
+    {
+        return isVisible;
+    }
+
+    public void setVisible(boolean visible)
+    {
+        isVisible = visible;
     }
 
     public boolean isSelected()
@@ -44,7 +56,7 @@ public class Box
         this.color = color;
     }
 
-    private Model3D getBoxMesh(GL4 gl)
+    private static synchronized Model3D getBoxMesh(GL4 gl)
     {
         if (cubeMesh == null) {
             cubeMesh = RenderingGeometryLib.generateCubeModel(gl);
@@ -74,6 +86,9 @@ public class Box
 
     public void draw(GL4 gl, StaticMVPShader shader, Matrix4f viewMatrix, Matrix4f projectionMatrix)
     {
+        if (!isVisible)
+            return;
+
         Matrix4f modelMatrix = new Matrix4f()
                 .loadIdentity()
                 .translate(position, new Matrix4f())
