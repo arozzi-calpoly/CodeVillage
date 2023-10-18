@@ -5,128 +5,19 @@ import com.jogamp.newt.NewtFactory;
 import com.jogamp.newt.Screen;
 import com.jogamp.newt.opengl.GLWindow;
 import com.jogamp.opengl.*;
-import com.jogamp.opengl.math.*;
+import com.jogamp.opengl.math.FovHVHalves;
+import com.jogamp.opengl.math.Matrix4f;
+import com.jogamp.opengl.math.Vec2f;
+import com.jogamp.opengl.math.Vec3f;
 import com.jogamp.opengl.util.FPSAnimator;
 
 import java.awt.*;
-import java.nio.file.Path;
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 
 public class UnitTesting
 {
-    /*
-    public static void testHorizontalMovementControllerKeyPresses()
-    {
-        JFrame frame = new JFrame();
-        frame.setSize(500, 500);
-        JPanel mainPanel = new JPanel(new GridLayout(4, 2));
-        JLabel wIsPressedLabel = new JLabel();
-        JLabel aIsPressedLabel = new JLabel();
-        JLabel sIsPressedLabel = new JLabel();
-        JLabel dIsPressedLabel = new JLabel();
-
-        mainPanel.setBorder(new CompoundBorder(
-                new EmptyBorder(15, 15, 15, 15),
-                new TitledBorder("Keys:")
-        ));
-
-        mainPanel.add(new JLabel("W:"));
-        mainPanel.add(wIsPressedLabel);
-        mainPanel.add(new JLabel("A:"));
-        mainPanel.add(aIsPressedLabel);
-        mainPanel.add(new JLabel("S:"));
-        mainPanel.add(sIsPressedLabel);
-        mainPanel.add(new JLabel("D:"));
-        mainPanel.add(dIsPressedLabel);
-
-        HorizontalMovementController horizontalMovementController = new HorizontalMovementController(1);
-        frame.addKeyListener(horizontalMovementController);
-
-        Thread thread = new Thread(() -> {
-            while(true)
-            {
-                wIsPressedLabel.setText("" + horizontalMovementController.getWIsPressed());
-                aIsPressedLabel.setText("" + horizontalMovementController.getAIsPressed());
-                sIsPressedLabel.setText("" + horizontalMovementController.getSIsPressed());
-                dIsPressedLabel.setText("" + horizontalMovementController.getDIsPressed());
-                try{
-                    Thread.sleep(50);
-                }
-                catch (InterruptedException e) {
-                    break;
-                }
-            }
-        });
-        thread.setDaemon(true);
-        thread.start();
-
-        frame.getContentPane().add(mainPanel);
-        frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-        frame.setLocationRelativeTo(null);
-        frame.pack();
-        frame.setVisible(true);
-    }
-
-    public static void testVerticalMovementControllerKeyPresses()
-    {
-        JFrame frame = new JFrame();
-        frame.setSize(500, 500);
-        JPanel mainPanel = new JPanel(new GridLayout(6, 2));
-        JLabel wIsPressedLabel = new JLabel();
-        JLabel aIsPressedLabel = new JLabel();
-        JLabel sIsPressedLabel = new JLabel();
-        JLabel dIsPressedLabel = new JLabel();
-        JLabel spaceIsPressedLabel = new JLabel();
-        JLabel shiftIsPressedLabel = new JLabel();
-
-        mainPanel.setBorder(new CompoundBorder(
-                new EmptyBorder(15, 15, 15, 15),
-                new TitledBorder("Keys:")
-        ));
-
-        mainPanel.add(new JLabel("W:"));
-        mainPanel.add(wIsPressedLabel);
-        mainPanel.add(new JLabel("A:"));
-        mainPanel.add(aIsPressedLabel);
-        mainPanel.add(new JLabel("S:"));
-        mainPanel.add(sIsPressedLabel);
-        mainPanel.add(new JLabel("D:"));
-        mainPanel.add(dIsPressedLabel);
-        mainPanel.add(new JLabel("Space:"));
-        mainPanel.add(spaceIsPressedLabel);
-        mainPanel.add(new JLabel("Shift:"));
-        mainPanel.add(shiftIsPressedLabel);
-
-        VerticalMovementController verticalMovementController = new VerticalMovementController(1);
-        frame.addKeyListener(verticalMovementController);
-
-        Thread thread = new Thread(() -> {
-            while(true)
-            {
-                wIsPressedLabel.setText("" + verticalMovementController.getWIsPressed());
-                aIsPressedLabel.setText("" + verticalMovementController.getAIsPressed());
-                sIsPressedLabel.setText("" + verticalMovementController.getSIsPressed());
-                dIsPressedLabel.setText("" + verticalMovementController.getDIsPressed());
-                spaceIsPressedLabel.setText("" + verticalMovementController.getSpaceBarIsPressed());
-                shiftIsPressedLabel.setText("" + verticalMovementController.getShiftIsPressed());
-                try{
-                    Thread.sleep(50);
-                }
-                catch (InterruptedException e) {
-                    break;
-                }
-            }
-        });
-        thread.setDaemon(true);
-        thread.start();
-
-        frame.getContentPane().add(mainPanel);
-        frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-        frame.setLocationRelativeTo(null);
-        frame.pack();
-        frame.setVisible(true);
-    }
-    */
     public static void testSimpleShader(MovementController movementController)
     {
         GLProfile glProfile = GLProfile.get(GLProfile.GL4);
@@ -157,40 +48,42 @@ public class UnitTesting
     private static class GLTestSimpleShaderEventListener implements GLEventListener
     {
         private final MovementController movementController;
+        private List<Box> boxes;
+
         public GLTestSimpleShaderEventListener(MovementController movementController)
         {
+            int NUM_CUBES_TO_ADD = 10000;
+            int cubesPerDimension = (int) Math.pow(NUM_CUBES_TO_ADD, 1. / 3);
             this.movementController = movementController;
+            this.boxes = new ArrayList<>();
+            for (int i = -cubesPerDimension / 2; i <= cubesPerDimension / 2; i++) {
+                for (int j = -cubesPerDimension / 2; j <= cubesPerDimension / 2; j++) {
+                    for (int k = -cubesPerDimension / 2; k <= cubesPerDimension / 2; k++) {
+                        boxes.add(new Box(
+                                new Vec3f(i, j, k),
+                                new Vec3f(0.05f, 0.05f, 0.05f),
+                                Color.getHSBColor((float) Math.random(), 1, 1)));
+                    }
+                }
+            }
         }
 
         private StaticMVPShader shader;
-        private Model3D sphereModel;
-        private Model3D groundModel;
-        private Texture modelTexture;
-        private Texture groundTexture;
         private Vec3f lightDirection;
         private Vec3f eyePosition;
         private Vec2f eyeRotation;
+
         @Override
         public void init(GLAutoDrawable glAutoDrawable)
         {
             GL4 gl = glAutoDrawable.getGL().getGL4();
-            String vertexShaderPath = "C:\\Users\\trozz\\OneDrive\\CalPoly\\SoftwareEngineeringII\\CodeVillage\\src\\main\\resources\\shaders\\simple_vertex_shader.glsl";
-            String fragmentShaderPath = "C:\\Users\\trozz\\OneDrive\\CalPoly\\SoftwareEngineeringII\\CodeVillage\\src\\main\\resources\\shaders\\simple_fragment_shader.glsl";
-            shader = new StaticMVPShader(gl, Path.of(vertexShaderPath), Path.of(fragmentShaderPath));
-
-            // sphereModel = RenderingGeometryLib.generateSphereBySubdividingIcosahedron(gl, 4);
-            sphereModel = RenderingGeometryLib.generateCubeModel(gl);
-
-            groundModel = RenderingGeometryLib.generateXZGrid(gl, -10, 10, -10, 10, 2, 2);
-
-            modelTexture = ModelLoader.createSolidColorTexture(gl, 100, 100, Color.MAGENTA);
-
-            groundTexture = ModelLoader.createSolidColorTexture(gl, 100, 100, new Color(128, 128, 128));
-
+            InputStream vertexShaderStream =
+                    ClassLoader.getSystemClassLoader().getResourceAsStream("shaders/simple_vertex_shader.glsl");
+            InputStream fragmentShaderStream =
+                    ClassLoader.getSystemClassLoader().getResourceAsStream("shaders/simple_fragment_shader.glsl");
+            shader = new StaticMVPShader(gl, vertexShaderStream, fragmentShaderStream);
             lightDirection = new Vec3f(1, -1, -2);
-
             eyePosition = new Vec3f(0, 0.05f, 3);
-
             eyeRotation = new Vec2f(0, 0);
         }
 
@@ -203,6 +96,7 @@ public class UnitTesting
             ModelLoader.cleanUp(gl);
             System.exit(0);
         }
+
         @Override
         public void display(GLAutoDrawable glAutoDrawable)
         {
@@ -220,74 +114,36 @@ public class UnitTesting
             eyePosition = movementController.getNextPosition(eyePosition, eyeRotation);
             eyeRotation = movementController.getNextRotation(eyePosition, eyeRotation);
 
-            // Matrix4f projectionMatrix = new Matrix4f().loadIdentity().setToPerspective((float)Math.toRadians(90.0f),
-            //        1280.0f/720.0f, 0.1f, 1000.0f);
-
-            // left=-width/2, right=+width/2, bottom=-height/2 and top=+height/2;
-            // projectionMatrix.setToOrtho(-width/2, +width/2, -height/2, +height/2, 0.1f, 100f);
             Matrix4f projectionMatrix = new Matrix4f().loadIdentity();
             projectionMatrix.setToPerspective(FovHVHalves.byRadians((float) (Math.PI / 2), (float) (Math.PI / 2)),
                     0.1f, 100f);
 
-            // Matrix4f viewMatrix = new Matrix4f().loadIdentity().setToTranslation(new Vec3f(eyePosition).scale(-1));
             Matrix4f viewMatrix = createViewMatrixFromEye(eyePosition, eyeRotation);
-            // System.out.println(eyePosition);
-            // System.out.println(eyeRotation);
-            // System.out.println();
-
-            double angle = (System.currentTimeMillis() / 1000.0 * 0.15) % (2 * Math.PI);
-            double angleX = (Math.sin(5.*angle + 11) + Math.sin(2.*angle + 17) + Math.sin(7.*angle + 13)) / 3 * 2 * Math.PI;
-            double angleY = (Math.sin(5.*angle + 17) + Math.sin(2.*angle + 13) + Math.sin(7.*angle + 11)) / 3 * 2 * Math.PI;
-            double angleZ = (Math.sin(5.*angle + 13) + Math.sin(2.*angle + 11) + Math.sin(7.*angle + 17)) / 3 * 2 * Math.PI;
-
-            double cubeScaleAngle = (System.currentTimeMillis() / 1000.0) % (2 * Math.PI);
-            double cubeScale = Math.sin(cubeScaleAngle) * 0.5 + 0.55;
-
-            Matrix4f modelMatrix = createModelTransformationMatrix(
-                    new Vec3f(0,1,0),
-                    (float) angleX, (float) angleY, (float) angleZ,
-                    (float) cubeScale);
-
             shader.start(gl);
             shader.loadEyePosition(gl, eyePosition);
             shader.loadLightDirection(gl, lightDirection);
-
-            // draw the sphere
-            shader.loadModelViewProjectionMatrices(gl, modelMatrix, viewMatrix, projectionMatrix);
-            shader.loadModelTexture(gl, modelTexture);
-            // bind the VAO
-            gl.glBindVertexArray(sphereModel.getVaoID());
-            // enable all the vertex attributes
-            sphereModel.enableAllVertexAttributeArrays(gl);
-            // activate and bind the textures for the model
-            shader.enableAllTextures(gl);
-            // finally, draw all the triangles
-            gl.glDrawElements(GL4.GL_TRIANGLES, sphereModel.getVertexCount(), GL.GL_UNSIGNED_INT, 0);
-            sphereModel.disableAllVertexAttributeArrays(gl);
-            gl.glBindVertexArray(0);
-
-            Matrix4f groundModelMatrix = new Matrix4f().loadIdentity().setToTranslation(0, -1f, 0);
-            // draw the ground
-            shader.loadModelViewProjectionMatrices(gl, groundModelMatrix, viewMatrix, projectionMatrix);
-            shader.loadModelTexture(gl, groundTexture);
-            // bind the VAO
-            gl.glBindVertexArray(groundModel.getVaoID());
-            // enable all the vertex attributes
-            groundModel.enableAllVertexAttributeArrays(gl);
-            // activate and bind the textures for the model
-            shader.enableAllTextures(gl);
-            // finally, draw all the triangles
-            gl.glDrawElements(GL4.GL_TRIANGLES, groundModel.getVertexCount(), GL.GL_UNSIGNED_INT, 0);
-            groundModel.disableAllVertexAttributeArrays(gl);
-            gl.glBindVertexArray(0);
-
-
+            // There are the constants used in the original Lorenz Attractor
+            double sigma = 10;
+            double rho = 28;
+            double beta = 8. / 3;
+            for (Box box : this.boxes) {
+                Vec3f position = box.getPosition();
+                double xStep = sigma * (position.y() - position.x());
+                double yStep = position.x() * (rho - position.z()) - position.y();
+                double zStep = position.x() * position.y() - beta * position.z();
+                Vec3f offset = new Vec3f((float) xStep, (float) yStep, (float) zStep);
+                offset.scale(0.001f);
+                position.add(offset);
+                box.draw(gl, shader, viewMatrix, projectionMatrix);
+                // position.sub(offset);
+            }
             shader.stop(gl);
         }
 
         @Override
         public void reshape(GLAutoDrawable glAutoDrawable, int i, int i1, int i2, int i3)
-        { }
+        {
+        }
 
         public static Matrix4f createModelTransformationMatrix(Vec3f translation, float rx, float ry,
                                                                float rz, float scale)
@@ -343,7 +199,8 @@ public class UnitTesting
     {
         @Override
         public void init(GLAutoDrawable glAutoDrawable)
-        { }
+        {
+        }
 
         @Override
         public void dispose(GLAutoDrawable glAutoDrawable)
@@ -353,6 +210,7 @@ public class UnitTesting
             // given by 'glAutoDrawable.getGL().getGL4()'
             System.exit(0);
         }
+
         @Override
         public void display(GLAutoDrawable glAutoDrawable)
         {
@@ -368,67 +226,10 @@ public class UnitTesting
             // enables multi-sample antialiasing (if the GLCapabilities object set it up)
             gl.glEnable(GL.GL_MULTISAMPLE);
         }
+
         @Override
         public void reshape(GLAutoDrawable glAutoDrawable, int i, int i1, int i2, int i3)
-        { }
-    }
-
-    public static JavaPackage createExampleOutput() {
-        JavaPackage app = new JavaPackage();
-        JavaClass appClass = new JavaClass(1, 1);
-        JavaClass appClass2 = new JavaClass(1, 2);
-
-        app.addClass(appClass);
-        app.addClass(appClass2);
-
-        JavaPackage subApp = new JavaPackage();
-        JavaClass subAppClass = new JavaClass(2, 1);
-        JavaClass subAppClass2 = new JavaClass(2, 2);
-        JavaClass subAppClass3 = new JavaClass(1, 3);
-
-        subApp.addClass(subAppClass);
-        subApp.addClass(subAppClass2);
-        subApp.addClass(subAppClass3);
-
-        // JavaPackage subApp2 = new JavaPackage();
-        // JavaClass subApp2Class = new JavaClass(1, 1);
-        // JavaClass subApp2Class2 = new JavaClass(2, 2);
-        // JavaClass subApp2Class3 = new JavaClass(3, 4);
-        //
-        // subApp2.addClass(subApp2Class);
-        // subApp2.addClass(subApp2Class2);
-        // subApp2.addClass(subApp2Class3);
-        //
-        app.addSubpackage(subApp);
-        // app.addSubpackage(subApp2);
-
-        return app;
-    }
-
-    public static BoundingBox calculateBounds(JavaPackage app) {
-        java.util.List<JavaPackage> subpackages = app.getSubpackages();
-        List<JavaClass> classes = app.getClasses();
-
-        BoundingBox boundingBox = new BoundingBox(new Vec3f(0, 0, 0), new Vec3f(1f, 1f, 1f));
-        double totalWidth = 0;
-        double spacing = 0.5;
-
-        for (JavaClass javaClass : classes) {
-            // length and width determined by NOA, height determined by NOM
-            Box box = new Box(new Vec3f(0, 0, 0),
-                    new Vec3f(1f * javaClass.getNOA(), 1f * javaClass.getNOM(), 1f * javaClass.getNOA()));
-            totalWidth += box.getSize().x() + (spacing * 2);
-            boundingBox.addBoundBox(box);
+        {
         }
-
-        for (JavaPackage javaPackage : subpackages) {
-
-            BoundingBox subBoundingBox = calculateBounds(javaPackage);
-            boundingBox.addBoundBox(subBoundingBox);
-            totalWidth += subBoundingBox.getSize().x() + (spacing * 2);
-        }
-
-        boundingBox.setSize(new Vec3f((float) totalWidth, 0, (float) totalWidth));
-        return boundingBox;
     }
 }

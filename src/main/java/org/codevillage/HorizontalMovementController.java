@@ -13,6 +13,7 @@ public class HorizontalMovementController implements MovementController
 
     protected float translationStepSize;
     protected float keyboardRotationStepSize;
+
     protected float mouseRotationStepSize;
 
     protected boolean isDraggingMouse;
@@ -69,6 +70,16 @@ public class HorizontalMovementController implements MovementController
         this.keyboardRotationStepSize = keyboardRotationStepSize;
     }
 
+    public float getMouseRotationStepSize()
+    {
+        return mouseRotationStepSize;
+    }
+
+    public void setMouseRotationStepSize(float mouseRotationStepSize)
+    {
+        this.mouseRotationStepSize = mouseRotationStepSize;
+    }
+
     @Override
     public synchronized Vec3f getNextPosition(Vec3f currentPosition, Vec2f currentRotationRads)
     {
@@ -84,13 +95,13 @@ public class HorizontalMovementController implements MovementController
         forwardVector.scale(translationStepSize);
         rightVector.scale(translationStepSize);
 
-        if(wIsPressed.get())
+        if (wIsPressed.get())
             nextPosition.add(forwardVector);
-        if(sIsPressed.get())
+        if (sIsPressed.get())
             nextPosition.sub(forwardVector);
-        if(dIsPressed.get())
+        if (dIsPressed.get())
             nextPosition.add(rightVector);
-        if(aIsPressed.get())
+        if (aIsPressed.get())
             nextPosition.sub(rightVector);
 
         return nextPosition;
@@ -107,15 +118,15 @@ public class HorizontalMovementController implements MovementController
         yawRads += xyDrag.x() * mouseRotationStepSize;
 
 
-        if(upIsPressed.get())
+        if (upIsPressed.get())
             pitchRads += keyboardRotationStepSize;
-        if(downIsPressed.get())
+        if (downIsPressed.get())
             pitchRads -= keyboardRotationStepSize;
 
-        if(leftIsPressed.get())
+        if (leftIsPressed.get())
             yawRads += keyboardRotationStepSize;
 
-        if(rightIsPressed.get())
+        if (rightIsPressed.get())
             yawRads -= keyboardRotationStepSize;
 
         return new Vec2f(pitchRads, yawRads);
@@ -144,11 +155,10 @@ public class HorizontalMovementController implements MovementController
     @Override
     public void keyPressed(KeyEvent keyEvent)
     {
-        if(keyEvent.isAutoRepeat())
+        if (keyEvent.isAutoRepeat())
             return;
 
-        switch (keyEvent.getKeyCode())
-        {
+        switch (keyEvent.getKeyCode()) {
             case KeyEvent.VK_W:
                 wIsPressed.set(true);
                 break;
@@ -180,11 +190,10 @@ public class HorizontalMovementController implements MovementController
     @Override
     public void keyReleased(KeyEvent keyEvent)
     {
-        if(keyEvent.isAutoRepeat())
+        if (keyEvent.isAutoRepeat())
             return;
 
-        switch (keyEvent.getKeyCode())
-        {
+        switch (keyEvent.getKeyCode()) {
             case KeyEvent.VK_W:
                 wIsPressed.set(false);
                 break;
@@ -215,15 +224,18 @@ public class HorizontalMovementController implements MovementController
 
     @Override
     public void mouseClicked(MouseEvent mouseEvent)
-    { }
+    {
+    }
 
     @Override
     public void mouseEntered(MouseEvent mouseEvent)
-    { }
+    {
+    }
 
     @Override
     public void mouseExited(MouseEvent mouseEvent)
-    { }
+    {
+    }
 
     @Override
     public void mousePressed(MouseEvent mouseEvent)
@@ -246,8 +258,7 @@ public class HorizontalMovementController implements MovementController
     @Override
     public void mouseDragged(MouseEvent mouseEvent)
     {
-        if(!isDraggingMouse)
-        {
+        if (!isDraggingMouse) {
             lastMouseDragLocation = new Vec2f(mouseEvent.getX(), mouseEvent.getY());
             isDraggingMouse = true;
             return;
@@ -260,7 +271,8 @@ public class HorizontalMovementController implements MovementController
 
     @Override
     public void mouseWheelMoved(MouseEvent mouseEvent)
-    { }
+    {
+    }
 
     public synchronized void addDragToAggregateDragDirection(Vec2f dragDirection)
     {
