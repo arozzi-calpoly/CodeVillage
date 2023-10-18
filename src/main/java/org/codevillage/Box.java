@@ -1,6 +1,5 @@
 package org.codevillage;
 
-<<<<<<< HEAD
 import com.jogamp.opengl.GL;
 import com.jogamp.opengl.GL4;
 import com.jogamp.opengl.math.Matrix4f;
@@ -10,8 +9,10 @@ import java.awt.*;
 
 public class Box
 {
+    private static Model3D cubeMesh;
     private Vec3f position;
     private Vec3f size;
+
     private boolean isSelected;
     private Color color;
 
@@ -21,6 +22,34 @@ public class Box
         this.size = size;
         this.color = color;
         this.isSelected = false;
+    }
+
+    public boolean isSelected()
+    {
+        return isSelected;
+    }
+
+    public void setSelected(boolean selected)
+    {
+        isSelected = selected;
+    }
+
+    public Color getColor()
+    {
+        return color;
+    }
+
+    public void setColor(Color color)
+    {
+        this.color = color;
+    }
+
+    private Model3D getBoxMesh(GL4 gl)
+    {
+        if (cubeMesh == null) {
+            cubeMesh = RenderingGeometryLib.generateCubeModel(gl);
+        }
+        return cubeMesh;
     }
 
     public Vec3f getPosition()
@@ -43,14 +72,14 @@ public class Box
         this.size = size;
     }
 
-    public void draw(GL4 gl, StaticMVPShader shader, Matrix4f viewMatrix, Matrix4f projectionMatrix,
-                     Texture modelTexture, Vec3f lightDirection, Model3D cubeModel)
+    public void draw(GL4 gl, StaticMVPShader shader, Matrix4f viewMatrix, Matrix4f projectionMatrix)
     {
         Matrix4f modelMatrix = new Matrix4f()
                 .loadIdentity()
                 .translate(position, new Matrix4f())
                 .scale(size.x(), size.y(), size.z(), new Matrix4f());
 
+        Model3D cubeModel = getBoxMesh(gl);
         shader.loadModelViewProjectionMatrices(gl, modelMatrix, viewMatrix, projectionMatrix);
         shader.loadModelColor(gl, this.color);
         gl.glBindVertexArray(cubeModel.getVaoID());
