@@ -173,8 +173,10 @@ public class UnitTesting {
     private Vec3f lightDirection;
     private Vec3f eyePosition;
     private Vec2f eyeRotation;
-    JavaPackage app;
-    BoundingBox boundingBox;
+    private JavaPackage app;
+    private BoxBounder boxBounder;
+    private BoxPacker boxPacker;
+    private BoundingBox bbox;
 
     @Override
     public void init(GLAutoDrawable glAutoDrawable) {
@@ -201,7 +203,13 @@ public class UnitTesting {
 
       app = createExampleOutput();
 
-      boundingBox = calculateBounds(app);
+      boxBounder = new BoxBounder(app);
+      bbox = boxBounder.calculateBounds();
+      System.out.println(bbox);
+
+      boxPacker = new BoxPacker(bbox);
+      boxPacker.pack();
+      System.out.println(bbox);
 
     }
 
@@ -261,36 +269,17 @@ public class UnitTesting {
       // Math.PI);
       // double cubeScale = Math.sin(cubeScaleAngle) * 0.5 + 0.55;
 
-      double angleX = 0;
-      double angleY = 0;
-      double angleZ = 0;
+      renderBoxes(bbox, gl, shader, cubeModel, viewMatrix, projectionMatrix,
+          modelTexture, eyePosition,
+          lightDirection);
 
-      double scaleX = boundingBox.getSize().x();
-      double scaleY = boundingBox.getSize().y();
-      double scaleZ = boundingBox.getSize().z();
-
-      Matrix4f modelMatrix = createModelTransformationMatrix(
-          new Vec3f(0, 1, 0),
-          (float) angleX, (float) angleY, (float) angleZ,
-          (float) scaleX, (float) scaleY, (float) scaleZ);
-
-      shader.start(gl);
-      shader.loadEyePosition(gl, eyePosition);
-      shader.loadLightDirection(gl, lightDirection);
-
-      // draw the cube
-      shader.loadModelViewProjectionMatrices(gl, modelMatrix, viewMatrix, projectionMatrix);
-      shader.loadModelTexture(gl, modelTexture);
-      // bind the VAO
-      gl.glBindVertexArray(cubeModel.getVaoID());
-      // enable all the vertex attributes
-      cubeModel.enableAllVertexAttributeArrays(gl);
-      // activate and bind the textures for the model
-      shader.enableAllTextures(gl);
-      // finally, draw all the triangles
-      gl.glDrawElements(GL4.GL_TRIANGLES, cubeModel.getVertexCount(), GL.GL_UNSIGNED_INT, 0);
-      cubeModel.disableAllVertexAttributeArrays(gl);
-      gl.glBindVertexArray(0);
+      // renderBox(boundingBox, gl, shader, cubeModel, viewMatrix, projectionMatrix,
+      // modelTexture, eyePosition,
+      // lightDirection, 0f);
+      // renderBox(boundingBox.getBoundBoxes().get(0), gl, shader, cubeModel,
+      // viewMatrix, projectionMatrix, modelTexture,
+      // eyePosition, lightDirection, boundingBox.getBoundBoxes().get(0).getSize().y()
+      // + boundingBox.getSize().y());
 
       Matrix4f groundModelMatrix = new Matrix4f().loadIdentity().setToTranslation(0, -1f, 0);
       // draw the ground
@@ -314,6 +303,185 @@ public class UnitTesting {
     public void reshape(GLAutoDrawable glAutoDrawable, int i, int i1, int i2, int i3) {
     }
 
+    public static void testGraphicsWindowCreation() {
+      GLProfile glProfile = GLProfile.get(GLProfile.GL4);
+
+      GLCapabilities glCapabilities = new GLCapabilities(glProfile);
+      glCapabilities.setDoubleBuffered(true);
+      glCapabilities.setHardwareAccelerated(true);
+
+      String windowTitle = "Window Creation Test";
+      Display display = NewtFactory.createDisplay(windowTitle);
+      Screen screen = NewtFactory.createScreen(display, 0);
+
+      int WINDOW_WIDTH = 800, WINDOW_HEIGHT = 600;
+      GLWindow window = GLWindow.create(screen, glCapabilities);
+      window.setTitle(windowTitle);
+      window.setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
+      window.setVisible(true);
+
+      FPSAnimator animator = new FPSAnimator(window, 30);
+      GLTestWindowCreationEventListener windowCreationEventListener = new GLTestWindowCreationEventListener();
+      animator.start();
+      // window.addKeyListener(windowCreationEventListener);
+      window.addGLEventListener(windowCreationEventListener);
+    }
+
+    private static class GLTestWindowCreationEventListener implements GLEventListener {
+      @Override
+      public void init(GLAutoDrawable glAutoDrawable) {
+      }
+
+      @Override
+      public void dispose(GLAutoDrawable glAutoDrawable) {
+        System.out.println("Disposed");
+        // Free the VAOs, textures, whatever resources you were using with the GL4
+        // instance
+        // given by 'glAutoDrawable.getGL().getGL4()'
+        System.exit(0);
+      }
+
+      @Override
+      public void display(GLAutoDrawable glAutoDrawable) {
+        GL4 gl = glAutoDrawable.getGL().getGL4();
+        double redComponent = Math.sin(System.currentTimeMillis() / 1000.0 * Math.PI) * 0.5 + 0.5;
+        gl.glClearColor((float) redComponent, 0, 0, 0);
+        gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
+        // configs alpha blending settings
+        gl.glEnable(GL.GL_BLEND);
+        gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
+        // turns on depth testing
+        gl.glEnable(GL.GL_DEPTH_TEST);
+        // enables multi-sample antialiasing (if the GLCapabilities object set it up)
+        gl.glEnable(GL.GL_MULTISAMPLE);
+      }
+
+      @Override
+      public void reshape(GLAutoDrawable glAutoDrawable, int i, int i1, int i2, int i3) {
+      }
+    }
+
+    public static JavaPackage createExampleOutput() {
+      JavaPackage app = new JavaPackage();
+      JavaClass appClass = new JavaClass(1, 1);
+      JavaClass appClass2 = new JavaClass(1, 2);
+
+      app.addClass(appClass);
+      app.addClass(appClass2);
+
+      JavaPackage subApp = new JavaPackage();
+      JavaClass subAppClass = new JavaClass(2, 1);
+      JavaClass subAppClass2 = new JavaClass(2, 2);
+      JavaClass subAppClass3 = new JavaClass(1, 3);
+
+      subApp.addClass(subAppClass);
+      subApp.addClass(subAppClass2);
+      subApp.addClass(subAppClass3);
+
+      // JavaPackage subApp2 = new JavaPackage();
+      // JavaClass subApp2Class = new JavaClass(1, 1);
+      // JavaClass subApp2Class2 = new JavaClass(2, 2);
+      // JavaClass subApp2Class3 = new JavaClass(3, 4);
+      //
+      // subApp2.addClass(subApp2Class);
+      // subApp2.addClass(subApp2Class2);
+      // subApp2.addClass(subApp2Class3);
+      //
+      app.addSubpackage(subApp);
+      // app.addSubpackage(subApp2);
+
+      return app;
+    }
+
+    public static BoundingBox calculateBounds(JavaPackage app) {
+      List<JavaPackage> subpackages = app.getSubpackages();
+      List<JavaClass> classes = app.getClasses();
+
+      BoundingBox boundingBox = new BoundingBox(new Vec3f(0, 0, 0), new Vec3f(1f, 1f, 1f));
+      double totalArea = 0;
+      double spacing = 0.5;
+
+      for (JavaClass javaClass : classes) {
+        // length and width determined by NOA, height determined by NOM
+        Box box = new Box(new Vec3f(0, 0, 0),
+            new Vec3f(1f + javaClass.getNOA(), 1f + javaClass.getNOM(), 1f + javaClass.getNOA()));
+        totalArea += Math.pow(box.getSize().x() + (spacing * 2), 2);
+        boundingBox.addBoundBox(box);
+      }
+
+      for (JavaPackage javaPackage : subpackages) {
+
+        BoundingBox subBoundingBox = calculateBounds(javaPackage);
+        boundingBox.addBoundBox(subBoundingBox);
+        totalArea += Math.pow(subBoundingBox.getSize().x() + (spacing * 2), 2);
+      }
+
+      double rootLength = Math.sqrt(totalArea);
+
+      int sideLength = (int) Math.ceil(rootLength);
+
+      boundingBox.setSize(new Vec3f((float) sideLength, 0.25f, (float) sideLength));
+      return boundingBox;
+    }
+
+    public static void renderBoxes(BoundingBox bbox, GL4 gl, StaticMVPShader shader, Model3D cubeModel,
+        Matrix4f viewMatrix, Matrix4f projectionMatrix, Texture modelTexture, Vec3f eyePosition,
+        Vec3f lightDirection) {
+      List<Box> boxes = bbox.getBoundBoxes();
+
+      renderBox(bbox, gl, shader, cubeModel, viewMatrix, projectionMatrix, modelTexture, eyePosition,
+          lightDirection);
+
+      for (int i = 0; i < boxes.size(); i++) {
+        Box box = boxes.get(i);
+        if (box instanceof BoundingBox) {
+          renderBoxes((BoundingBox) boxes.get(i), gl, shader, cubeModel, viewMatrix, projectionMatrix,
+              modelTexture,
+              eyePosition, lightDirection);
+        } else {
+          renderBox(box, gl, shader, cubeModel, viewMatrix, projectionMatrix, modelTexture, eyePosition,
+              lightDirection);
+        }
+      }
+    }
+
+    public static void renderBox(Box box, GL4 gl, StaticMVPShader shader, Model3D cubeModel,
+        Matrix4f viewMatrix, Matrix4f projectionMatrix, Texture modelTexture, Vec3f eyePosition,
+        Vec3f lightDirection) {
+
+      double angleX = 0;
+      double angleY = 0;
+      double angleZ = 0;
+
+      double scaleX = box.getSize().x();
+      double scaleY = box.getSize().y();
+      double scaleZ = box.getSize().z();
+
+      Matrix4f modelMatrix = createModelTransformationMatrix(
+          new Vec3f(0, box.getCenter().y(), 0),
+          (float) angleX, (float) angleY, (float) angleZ,
+          (float) scaleX, (float) scaleY, (float) scaleZ);
+
+      shader.start(gl);
+      shader.loadEyePosition(gl, eyePosition);
+      shader.loadLightDirection(gl, lightDirection);
+
+      // draw the cube
+      shader.loadModelViewProjectionMatrices(gl, modelMatrix, viewMatrix, projectionMatrix);
+      shader.loadModelTexture(gl, modelTexture);
+      // bind the VAO
+      gl.glBindVertexArray(cubeModel.getVaoID());
+      // enable all the vertex attributes
+      cubeModel.enableAllVertexAttributeArrays(gl);
+      // activate and bind the textures for the model
+      shader.enableAllTextures(gl);
+      // finally, draw all the triangles
+      gl.glDrawElements(GL4.GL_TRIANGLES, cubeModel.getVertexCount(), GL.GL_UNSIGNED_INT, 0);
+      cubeModel.disableAllVertexAttributeArrays(gl);
+      gl.glBindVertexArray(0);
+
+    }
+
     public static Matrix4f createModelTransformationMatrix(Vec3f translation, float rx, float ry,
         float rz, float sx, float sy, float sz) {
       Matrix4f matrix = new Matrix4f();
@@ -334,123 +502,6 @@ public class UnitTesting {
       matrix.translate(new Vec3f(eyePosition).scale(-1), new Matrix4f());
       return matrix;
     }
-  }
-
-  public static void testGraphicsWindowCreation() {
-    GLProfile glProfile = GLProfile.get(GLProfile.GL4);
-
-    GLCapabilities glCapabilities = new GLCapabilities(glProfile);
-    glCapabilities.setDoubleBuffered(true);
-    glCapabilities.setHardwareAccelerated(true);
-
-    String windowTitle = "Window Creation Test";
-    Display display = NewtFactory.createDisplay(windowTitle);
-    Screen screen = NewtFactory.createScreen(display, 0);
-
-    int WINDOW_WIDTH = 800, WINDOW_HEIGHT = 600;
-    GLWindow window = GLWindow.create(screen, glCapabilities);
-    window.setTitle(windowTitle);
-    window.setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
-    window.setVisible(true);
-
-    FPSAnimator animator = new FPSAnimator(window, 30);
-    GLTestWindowCreationEventListener windowCreationEventListener = new GLTestWindowCreationEventListener();
-    animator.start();
-    // window.addKeyListener(windowCreationEventListener);
-    window.addGLEventListener(windowCreationEventListener);
-  }
-
-  private static class GLTestWindowCreationEventListener implements GLEventListener {
-    @Override
-    public void init(GLAutoDrawable glAutoDrawable) {
-    }
-
-    @Override
-    public void dispose(GLAutoDrawable glAutoDrawable) {
-      System.out.println("Disposed");
-      // Free the VAOs, textures, whatever resources you were using with the GL4
-      // instance
-      // given by 'glAutoDrawable.getGL().getGL4()'
-      System.exit(0);
-    }
-
-    @Override
-    public void display(GLAutoDrawable glAutoDrawable) {
-      GL4 gl = glAutoDrawable.getGL().getGL4();
-      double redComponent = Math.sin(System.currentTimeMillis() / 1000.0 * Math.PI) * 0.5 + 0.5;
-      gl.glClearColor((float) redComponent, 0, 0, 0);
-      gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
-      // configs alpha blending settings
-      gl.glEnable(GL.GL_BLEND);
-      gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
-      // turns on depth testing
-      gl.glEnable(GL.GL_DEPTH_TEST);
-      // enables multi-sample antialiasing (if the GLCapabilities object set it up)
-      gl.glEnable(GL.GL_MULTISAMPLE);
-    }
-
-    @Override
-    public void reshape(GLAutoDrawable glAutoDrawable, int i, int i1, int i2, int i3) {
-    }
-  }
-
-  public static JavaPackage createExampleOutput() {
-    JavaPackage app = new JavaPackage();
-    JavaClass appClass = new JavaClass(1, 1);
-    JavaClass appClass2 = new JavaClass(1, 2);
-
-    app.addClass(appClass);
-    app.addClass(appClass2);
-
-    JavaPackage subApp = new JavaPackage();
-    JavaClass subAppClass = new JavaClass(2, 1);
-    JavaClass subAppClass2 = new JavaClass(2, 2);
-    JavaClass subAppClass3 = new JavaClass(1, 3);
-
-    subApp.addClass(subAppClass);
-    subApp.addClass(subAppClass2);
-    subApp.addClass(subAppClass3);
-
-    // JavaPackage subApp2 = new JavaPackage();
-    // JavaClass subApp2Class = new JavaClass(1, 1);
-    // JavaClass subApp2Class2 = new JavaClass(2, 2);
-    // JavaClass subApp2Class3 = new JavaClass(3, 4);
-    //
-    // subApp2.addClass(subApp2Class);
-    // subApp2.addClass(subApp2Class2);
-    // subApp2.addClass(subApp2Class3);
-    //
-    app.addSubpackage(subApp);
-    // app.addSubpackage(subApp2);
-
-    return app;
-  }
-
-  public static BoundingBox calculateBounds(JavaPackage app) {
-    List<JavaPackage> subpackages = app.getSubpackages();
-    List<JavaClass> classes = app.getClasses();
-
-    BoundingBox boundingBox = new BoundingBox(new Vec3f(0, 0, 0), new Vec3f(1f, 1f, 1f));
-    double totalWidth = 0;
-    double spacing = 0.5;
-
-    for (JavaClass javaClass : classes) {
-      // length and width determined by NOA, height determined by NOM
-      Box box = new Box(new Vec3f(0, 0, 0),
-          new Vec3f(1f * javaClass.getNOA(), 1f * javaClass.getNOM(), 1f * javaClass.getNOA()));
-      totalWidth += box.getSize().x() + (spacing * 2);
-      boundingBox.addBoundBox(box);
-    }
-
-    for (JavaPackage javaPackage : subpackages) {
-
-      BoundingBox subBoundingBox = calculateBounds(javaPackage);
-      boundingBox.addBoundBox(subBoundingBox);
-      totalWidth += subBoundingBox.getSize().x() + (spacing * 2);
-    }
-
-    boundingBox.setSize(new Vec3f((float) totalWidth, 0, (float) totalWidth));
-    return boundingBox;
   }
 
 }
