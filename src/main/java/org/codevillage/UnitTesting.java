@@ -127,6 +127,9 @@ public class UnitTesting
             double rho = 28;
             double beta = 8. / 3;
             for (Box box : this.boxes) {
+                boolean isVisible = Math.sin((box.hashCode() + System.currentTimeMillis() / 1000.)) > 0;
+                box.setVisible(isVisible);
+
                 Vec3f position = box.getPosition();
                 double xStep = sigma * (position.y() - position.x());
                 double yStep = position.x() * (rho - position.z()) - position.y();
