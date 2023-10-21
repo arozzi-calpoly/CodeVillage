@@ -1,14 +1,14 @@
 package org.codevillage;
 
-import com.jogamp.opengl.math.*;
+import com.jogamp.opengl.math.Vec3f;
+
 import java.util.List;
-import java.util.ArrayList;
 
 public class BoundingBox extends Box
 {
     public final List<Box> boundedBoxes;
 
-    private BoundingBox(Vec3f position, Vec3f size, List<Box> boundedBoxes)
+    BoundingBox(Vec3f position, Vec3f size, List<Box> boundedBoxes)
     {
         super(position, size);
         this.boundedBoxes = boundedBoxes;
@@ -27,7 +27,7 @@ public class BoundingBox extends Box
         float minZ = Float.POSITIVE_INFINITY, maxZ = Float.NEGATIVE_INFINITY;
 
         for (Box box : boxes) {
-            Vec3f boxPosition = box.getPosition();
+            Vec3f boxPosition = box.getCenter();
             Vec3f boxSide = box.getSize();
             minX = Math.min(minX, boxPosition.x() - boxSide.x() / 2);
             maxX = Math.max(maxX, boxPosition.x() + boxSide.x() / 2);
@@ -41,21 +41,28 @@ public class BoundingBox extends Box
         Vec3f size = new Vec3f(maxX - minX, maxY - minY, maxZ - minZ);
         return new BoundingBox(center, size, boxes);
     }
-  public boolean fits(Box box) {
-    // check the upper left and lower right corners of the box to see if they are
-    // within the bounding box
-    Vec3f upperLeft = box.getUpperLeft();
-    Vec3f lowerRight = box.getLowerRight();
-    Vec3f bboxUpperLeft = getUpperLeft();
-    Vec3f bboxLowerRight = getLowerRight();
-    return (upperLeft.x() >= bboxUpperLeft.x() && upperLeft.z() <= bboxUpperLeft.z()
-        && lowerRight.x() <= bboxLowerRight.x() && lowerRight.z() >= bboxLowerRight.z());
-  }
 
-  @Override
-  public String toString() {
-    return "Bounding Box: [center=" + getCenter() + ", size=" + getSize() + ", boxes=" + boundBoxes.toString() + "]";
-  }
+    public boolean fits(Box box)
+    {
+        // check the upper left and lower right corners of the box to see if they are
+        // within the bounding box
+        Vec3f upperLeft = box.getUpperLeft();
+        Vec3f lowerRight = box.getLowerRight();
+        Vec3f bboxUpperLeft = getUpperLeft();
+        Vec3f bboxLowerRight = getLowerRight();
+        return (upperLeft.x() >= bboxUpperLeft.x() && upperLeft.z() <= bboxUpperLeft.z()
+                && lowerRight.x() <= bboxLowerRight.x() && lowerRight.z() >= bboxLowerRight.z());
+    }
+
+    @Override
+    public String toString()
+    {
+        return "Bounding Box: [center=" + getCenter() + ", size=" + getSize() + ", boxes=" + boundedBoxes.toString() + "]";
+    }
 
 
+    public List<Box> getBoundedBoxes()
+    {
+        return this.boundedBoxes;
+    }
 }

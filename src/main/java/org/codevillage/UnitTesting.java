@@ -296,7 +296,7 @@ public class UnitTesting
                 double scaleZ = box.getSize().z();
 
                 Matrix4f modelMatrix = createModelTransformationMatrix(
-                        box.getPosition(),
+                        box.getCenter(),
                         (float) angleX, (float) angleY, (float) angleZ,
                         (float) scaleX, (float) scaleY, (float) scaleZ);
 
@@ -497,9 +497,12 @@ public class UnitTesting
     public static List<Box> createBoxSceneFromPackage(JavaPackage app)
     {
         BoundingBox rootBox = createBoxSceneFromPackageRecur(app);
-        Vec3f centerOfScene = new Vec3f(0, 0, 0);
+        Vec3f topLeftOfRoot = new Vec3f(-rootBox.getSize().x() / 2,
+                0,
+                -rootBox.getSize().z() / 2);
+
         List<Box> spacedOutBoxes = new ArrayList<>();
-        linearizeBoxTreeRecur(rootBox, centerOfScene, 0, spacedOutBoxes);
+        linearizeBoxTreeRecur(rootBox, topLeftOfRoot, 0, spacedOutBoxes);
         return spacedOutBoxes;
     }
 
@@ -507,21 +510,14 @@ public class UnitTesting
 
     private static void linearizeBoxTreeRecur(Box box, Vec3f topLeftOfParentBox, int depth, List<Box> spacedOutBoxes)
     {
-        /*
-        if (box instanceof BoundingBox) {
-            box.getSize().setY(PACKAGE_BOX_HEIGHT);
-            box.getPosition().setY(box.getSize().y() / 2f);
-        }
-         */
-
         float heightFromXZPlane = depth * PACKAGE_BOX_HEIGHT;
 
         Vec3f newPosition = new Vec3f(
-                box.getPosition().x() + topLeftOfParentBox.x(),
+                box.getCenter().x() + topLeftOfParentBox.x(),
                 box.getSize().y() / 2f + heightFromXZPlane,
-                box.getPosition().z() + topLeftOfParentBox.z());
+                box.getCenter().z() + topLeftOfParentBox.z());
 
-        box.setPosition(newPosition);
+        box.setCenter(newPosition);
 
         Vec3f newTopLeft = new Vec3f(newPosition).sub(new Vec3f(box.getSize().x() / 2, 0, box.getSize().z() / 2));
 
@@ -615,7 +611,7 @@ public class UnitTesting
                 // need to translate the top-left corner of the box
                 // to the given position
                 Vec2f newCenter = new Vec2f(position.x() + box.getSize().x() / 2, position.y() + box.getSize().z() / 2);
-                box.setPosition(new Vec3f(newCenter.x(), 0, newCenter.y()));
+                box.setCenter(new Vec3f(newCenter.x(), 0, newCenter.y()));
                 // calculated AFTER translation, they are relative to new_rect
                 Vec2f topRight = new Vec2f(position.x() + box.getSize().x(), position.y());
                 Vec2f bottomLeft = new Vec2f(position.x(), position.y() + box.getSize().z());
@@ -646,10 +642,10 @@ public class UnitTesting
     private static boolean rectangleCanBePlaced(Box candidateRect, List<Box> placedRectangles,
                                                 double containerWidth, double containerHeight)
     {
-        if (candidateRect.getPosition().x() + candidateRect.getSize().x() / 2 > containerWidth)
+        if (candidateRect.getCenter().x() + candidateRect.getSize().x() / 2 > containerWidth)
             return false;
 
-        if (candidateRect.getPosition().z() + candidateRect.getSize().z() / 2 > containerHeight)
+        if (candidateRect.getCenter().z() + candidateRect.getSize().z() / 2 > containerHeight)
             return false;
 
         for (Box placedRect : placedRectangles) {
@@ -661,15 +657,15 @@ public class UnitTesting
 
     private static boolean boxesOverlapInXZPlane(Box box1, Box box2)
     {
-        double box1Left = box1.getPosition().x() - box1.getSize().x() / 2;
-        double box1Right = box1.getPosition().x() + box1.getSize().x() / 2;
-        double box1Top = box1.getPosition().z() - box1.getSize().z() / 2;
-        double box1Bottom = box1.getPosition().z() + box1.getSize().z() / 2;
+        double box1Left = box1.getCenter().x() - box1.getSize().x() / 2;
+        double box1Right = box1.getCenter().x() + box1.getSize().x() / 2;
+        double box1Top = box1.getCenter().z() - box1.getSize().z() / 2;
+        double box1Bottom = box1.getCenter().z() + box1.getSize().z() / 2;
 
-        double box2Left = box2.getPosition().x() - box2.getSize().x() / 2;
-        double box2Right = box2.getPosition().x() + box2.getSize().x() / 2;
-        double box2Top = box2.getPosition().z() - box2.getSize().z() / 2;
-        double box2Bottom = box2.getPosition().z() + box2.getSize().z() / 2;
+        double box2Left = box2.getCenter().x() - box2.getSize().x() / 2;
+        double box2Right = box2.getCenter().x() + box2.getSize().x() / 2;
+        double box2Top = box2.getCenter().z() - box2.getSize().z() / 2;
+        double box2Bottom = box2.getCenter().z() + box2.getSize().z() / 2;
 
         return box1Left < box2Right && box1Right > box2Left &&
                 box1Top > box2Bottom && box1Bottom < box2Top;
